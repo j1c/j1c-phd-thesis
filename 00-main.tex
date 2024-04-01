@@ -216,6 +216,9 @@ multicol,multirow,tabularx,xltabular,rotating}
 
 %% add more packages and/or change options of the packages as needed
 
+%%%% Preamble for all the commands
+\input{preamble}
+
 %%%%%%%%%%%%%%%%%%%%%%%%% END LaTeX CLASS AND PACKAGES %%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -569,8 +572,7 @@ with the requirements for the degree of {#2}
 \include{08-chapter-3}
 \include{09-chapter-4}
 \include{10-chapter-5}
-
-%% add more main text chapters
+\include{11-discussions}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%% END MAIN TEXT %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -588,11 +590,11 @@ with the requirements for the degree of {#2}
 
 
 %%%% OPTIONAL: Appendix chapter (same format as the main chapters)
-\MainTextSpacing                    
-\fancyhead[L]{\appendixname\ \thechapter. \nouppercase \leftmark}
+% \MainTextSpacing                    
+% \fancyhead[L]{\appendixname\ \thechapter. \nouppercase \leftmark}
 
-\include{12-appendix-A}
-\include{13-appendix-B}
+% \include{12-appendix-A}
+% \include{13-appendix-B}
 
 %% add more appendix chapters as you need
 

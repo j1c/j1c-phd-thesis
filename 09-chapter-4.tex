@@ -1,21 +1,265 @@
-\chapter{Chapter title goes here} \label{chap:chap-4}
+\chapter[Two-Sample Graph Testing]{Valid Two-Sample Graph Testing via Optimal Transport Procrustes and Multiscale Graph Correlation with Applications in Connectomics} \label{chap:nonpar}
 
+This chapter documents our first investigation into the alpha blocker treatment hypothesis in humans facing a severe respiratory illness. Importantly, this study leveraged large insurance claims databases and common health conditions during a period where the COVID-19 data environment was too immature to produce a sufficiently large and well-understood sample for this analysis. This chapter was originally published in ELife in June 2021 (DOI:  http://jmlr.org/papers/v20/19-490.html) and is distributed under the terms of a Creative Commons Attribution License that permits unrestricted use and redistribution provided that the original author and source are credited.
 
 \begin{singlespace}
     \epigraph{\enquote{This is a large quote placed with \\ 
     single spacing over two lines}}{-- Unknown author}
 \end{singlespace}
 
+\pagebreak
+\section*{Abstract}
+Testing whether two graphs come from the same distribution is of interest in many real world scenarios, including brain network analysis.
+Under the random dot product graph model, the nonparametric hypothesis testing framework consists of embedding the graphs using the adjacency spectral embedding (ASE), followed by  aligning the embeddings using the median flip heuristic, and finally applying the nonparametric maximum mean discrepancy (MMD) test to obtain a p-value.
+Using synthetic data generated from \textit{Drosophila} brain networks, we show that the median flip heuristic results in an invalid test, and demonstrate that optimal transport Procrustes (OTP) for alignment resolves the invalidity.
+We further demonstrate that substituting the MMD test with multiscale graph correlation (MGC) test leads to a more powerful test both in synthetic and in simulated data.
+Lastly, we apply this powerful test to the right and left hemispheres of the larval \textit{Drosophila} mushroom body brain networks, and conclude that there is not sufficient evidence to reject the null hypothesis that the two hemispheres are equally distributed.
 
-%% remove the following and add your chapter text here
-\section{Introduction}
+\pagebreak
 
-\begin{figure}[ht]
-\begin{center}
-    \includegraphics[width=\textwidth, trim={6cm 5cm 6cm 5cm},clip,page=1] {chap4.pdf}
-    \caption{Here are some photos of ducks to make you feel happy in tough times.}
-    \label{fig:ducks}
-\end{center}
+\section{Introduction}\label{sec:introduction}
+A network, or graph, is a data type which naturally encodes information about relationships between variables.
+Statistical network analysis is becoming an increasingly important area \cite{goldenberg2010survey}, as it has applications in fields such as brain \cite{bullmore2009complex} and social sciences \cite{wasserman1994social}. Often, we encounter more than one graph observation, and it is  scientifically interesting to determine whether the two graphs come from the same distribution: the \textit{two-sample graph hypothesis testing} problem. 
+When the two samples are real-valued scalars, procedures such as the $t$-test and Wilcoxon rank-sum test are available, but these methods do not generalize to more complex data types such as networks.
+
+Recently, methods have been proposed for determining whether two graphs are statistically equivalent under different settings \cite{semipar, omni, tang2014nonparametric, graph-comparison-same-1, graph-comparison-same-3, graph-comparison-same-4, graph-comparison-other-1, graph-comparison-other-2, graph-comparison-other-5, graph-comparison-other-8, graph-comparison-other-9}.
+Most of these methodologies are aimed for pairs of graphs with a known correspondence between their vertices, and thus the problem consist in finding significant differences on the corresponding edges or vertices. 
+Here, we focus on the more general setting where this vertex correspondence is unknown or might not exist, for example when the graphs do not have the same number of vertices. 
+In this setting, we are interested in identifying significant differences on some underlying structure of the vertices.
+In particular, \citet{tang2014nonparametric} proposed a nonparametric approach that operates on pairs of graphs in which there is no known correspondence between their corresponding vertex sets using the distance between probability distributions on a vertex latent space. This method uses the maximum mean discrepancy (MMD) test to detect differences between  distributions of the estimated latent positions of the vertices.
+In \citet{agterberg2020nonparametric}, the authors extend this procedure to resolve the inherent non-identifiabilities in the vertex latent space via an optimal transport solution that yields consistent nonparametric hypothesis test.
+% study a similar test statistic when there is nonidentifiabilities between the estimated vertex latent space, 
+% random graphs with both negative and repeated eigenvalues and sparsity, 
+% and they show that properly aligning the respective latent space yields consistent nonparametric hypothesis testing. 
+
+MMD has been shown to be equivalent to the Energy distance two-sample test, the Hilbert-Schmidt independence
+criterion (HSic), and the distance correlation test for independence (DCorr) \cite{exact-equivalence-1, exact-equivalence-2}. 
+HSic and DCorr, which are independence tests, are used as two-sample tests via first performing a \textit{k-sample transform}, which consists of concatenating the two samples, defining an auxiliary label vector, and subsequently testing for independence of the samples and label vector \cite{exact-equivalence-2}.
+Multiscale graph correlation (MGC) is a recently proposed measure of dependence that
+has shown an improved empirical power in many settings by intelligently selecting the appropriate
+scale of the data \cite{mgc-0, mgc-1, mgc-2}. In this paper, we propose a new methodology for testing equivalence of distributions between networks using MGC as the test statistic. We demonstrate empirically in multiple simulation and synthetic data settings that
+MGC outperforms other methods, and demonstrate its use on the problem of comparing the connectivity of the brain hemispheres of the \textit{Drosophila melanogaster}.
+
+\section{Background}\label{sec:background}
+\subsection{Graphs and Embeddings}
+A graph $G = (\mathbb{V}, \mathbb{E})$ with $n$ vertices is composed of a vertex set $\mathbb{V} = \{v_1, \dots, v_n\}$ and an edge set $\mathbb{E} \subseteq \mathbb{V} \times \mathbb{V}$, where the edge $(v_i,v_j)\in\mathbb{E}$ connects vertices $i$ and $j$. Graphs can be represented by an adjacency matrix $A\in\{0,1\}^{n\times n}$, with rows and columns corresponding to vertices and matrix entries corresponding to edge values, so $A_{ij}=1$ whenever $(v_i,v_j)\in\mathbb{E}$.
+
+The \textit{random dot product graph} (RDPG) model \cite{athreya2018rdpg} treats the entries of an adjacency matrix $A$ as independent Bernoulli random variables, where the probability of an edge is given by the dot product of pairs of latent positions $x_1,\ldots, x_n\in\mathbb{R}^d$ for each vertex, so $\mathbb{P}(A_{ij}=1) = x_i^\top x_j$. These latent positions are independent random variables sampled according to some distribution $F$. Writing $X = \left[x_1 \cdots x_n\right]^\top$ as the matrix of latent positions, we denote $(X,A)\sim\text{RDPG}_n(F)$ as a RDPG with adjacency matrix $A$ and (usually unobserved) latent positions $X$ sampled from $F$. With this notation, we have that $\mathbb{E}(A|X) = XX^{\top}$. 
+
+The RDPG model provides a flexible framework for studying the statistical equivalence of a pair of graphs. Suppose that $(X,A)\sim\text{RDPG}_n(F_X)$ and $(Y,B)\sim\text{RDPG}_m(F_Y)$. 
+Then, the two graphs $A$ and $B$ are said to have the same distribution if there exists an orthogonal matrix $W\in\mathbb{R}^{d\times d}$, $W^\top W = I$ that makes $X$ and $W^\top Y$ have the same distribution. 
+The matrix $W$ accounts for the nonidentifiability inherent with inner products \cite{tang2014nonparametric}. 
+Formally, this hypotheses test can be stated as 
+  \begin{align*}
+    &H_0 : F_X = F_Y \circ {W}
+    && \text{for some orthogonal operator } {W},\\
+       &H_A : F_X \neq F_Y \circ {W}
+    && \text{for all orthogonal operators } {W}.
+  \end{align*}
+Here, $F_Y\circ W$ denotes the distribution of the random variable $W^\top Y$. 
+The graphs $A$ and $B$ do not need to have a correspondence between their vertices, or even
+the same number of vertices, because we are comparing distributions of latent
+positions instead of the latent positions themselves. 
+This work focuses on cases where the number of vertices are equal, or approximately equal, that is $n \approx m$. 
+
+Latent positions are typically unobserved in practice and can be estimated via the \textit{adjacency spectral embedding} (ASE) \cite{ase-consistency-1}.
+Suppose that $A= USV^\top + U_\perp S_\perp V^\top_\perp$ is the singular value decomposition of $A$, where $U,V\in\mathbb{R}^{n\times d}$, $U_\perp,V_\perp\in\mathbb{R}^{n\times(n-d)}$ are jointly orthogonal matrices
+corresponding to the singular vectors of $A$, and $S\in\mathbb{R}^{d\times d}$,
+$S_\perp\in\mathbb{R}^{(n-d)\times (n-d)}$ are diagonal matrices such that $S$
+contains the $d$ largest singular values of $A$. 
+Then, the ASE of $A$ is defined as $\hat{X}=US^{1/2}$. This simple and computationally efficient approach results in consistent estimates $\hat{X}$ and $\hat{Y}$ of the true latent positions $X$ and $Y$ \cite{ase-consistency-1,ase-consistency-2, ase-consistency-3}.
+The ASE depends on a parameter $d$ that corresponds to the rank of the expected adjacency matrix conditional on the latent positions; in practice, we estimate this dimension, $\hat d$ via the scree plot of the eigenvalues of the adjacency matrix which can be done automatically via a likelihood profile approach \cite{zhu2006automatic}.
+
+If the two networks have large difference in the number of vertices, the subsequent testing procedure might be invalid due to the finite-sample variances of the estimated latent positions, $\hat{X}$ and $\hat Y$, that depend on the number of vertices \cite{Athreya2015}. Thus, the distributions of the estimated latent positions may not be the same even if the true distributions are the same. The difference in variances can be corrected by adding scaled Gaussian noise to the estimated latent positions of larger network, which increases the variance of the larger network to be approximately the same as that of the smaller network \cite{correcting-nonpar}. This correction results in a valid test for the equivalence of the distributions of latent positions. 
+
+
+\subsection{Orthogonal Nonidentifiabilities}
+There are two sources of an orthogonal nonidentifiability associated with using the
+ASE in RDPG \cite{on-two-sources}. The first is associated with the RDPG model itself, and can take a form of any orthogonal transformation, since for any
+orthogonal matrix $W$, it holds that $(XW)(XW)^\top = X W W^\top X^\top = X X^\top$. When
+using ASE, this orthogonal matrix converges to a population value at the rate 
+$O_p \left(n^{-1/2}\right)$, and, thus, rarely has any inferential consequences \cite{tang2014nonparametric, on-two-sources}.
+
+The second source, called subspace nonidentifiability, is associated with taking a singular value decomposition as a part of the ASE. 
+Consider the singular value decomposition of the matrix $XX^\top$.
+Since it is positive semidefinite, its eigendecomposition and singular value decomposition coincide.
+If $XX^\top$ has no repeated singular (eigen) values, then each singular (eigen) vector is determined only up to a sign ambiguity.
+However, if $XX^\top$ has repeated eigenvalues, then the singular (eigen) vectors corresponding to each repeated singular value are only unique up to an orthogonal transformation in the dimension of the corresponding subspace.
+Since one only observes two different adjacency matrices, then the leading singular vectors may not be aligned \textit{a priori}.
+If one assumes that $XX^\top$ has distinct eigenvalues, this sign ambiguity is often adjusted for by flipping the signs of each dimensions such that the medians have the same sign; that is for each embedding dimension, $\text{sign}(\text{median}(X_i)) = \text{sign}(\text{median}(Y_i))$ for all $i\in d$ \cite{tang2014nonparametric, correcting-nonpar}. 
+This heuristic can perform poorly when the medians of the samples are too close to zero.
+In addition, this approach falls short in the case of repeated eigenvalues of the matrix $XX^{\top}$ since the subspace associated with such values are only unique up to a more general rotation, and hence the leading singular vectors of each adjacency matrix may not be close, even if $n$ is large, since the leading singular values of the adjacency matrices will be perturbed versions of the singular values of $XX^\top$. For more details and discussion on this form of nonidentifiability, see \citet{on-two-sources}. 
+
+If the two graphs had paired vertices, then the orthogonal misalignment between the two samples could be resolved by using a solution to
+a well-known orthogonal Procrustes problem \cite{schonemann1966generalized}.
+In unpaired graphs, there is no \textit{a priori} assignment between vertices, so we can employ an Optimal Transport Procrustes (OTP) algorithm \cite{agterberg2020nonparametric}, which simultaneously solves the alignment and the assignment problems. Formally, this algorithm minimizes the objective function
+\begin{align}
+    \min_{W,  \Pi} \langle \Pi, C_W \rangle
+    \label{eq:2.1}
+\end{align}
+where the entries of the cost matrix $C_W$ are given by $\left(C_W\right)_{ij} =  ||\hat X_i - W\hat Y_j||^2$,  $\hat X \in \mathbb{R}^{n\times d}$ and $\hat Y \in \mathbb{R}^{m\times d}$ are estimated latent positions,  $\Pi = \frac{1}{nm} \mathbf{1} \mathbf{1}^\top$ is an assignment matrix that satisfies $\Pi \mathbf{1} = \frac{1}{n} \mathbf{1}$ and $\Pi^{\top} \mathbf{1} = \frac{1}{m} \mathbf{1}$, and $W$ is constrained to be orthogonal. Given an initial guess $W_0$, the algorithm iteratively updates $\Pi_{i+1} | W_{i}$
+by via an optimal transport algorithm \cite{alvarez2019towards} and $W_{i+1} | \Pi_{i}$ using the solution to the Procrustes problem. In graph setting, the algorithm is initialized with all possible orthogonal diagonal matrices, i.e. the 
+$2^d$ different diagonal matrices with $\pm{1}$ on the diagonal \cite{agterberg2020nonparametric}. In \citet{agterberg2020nonparametric}, the authors show that the orthogonal matrix that globally minimizes the objective function \eqref{eq:2.1} yields a consistent estimate of the orthogonal matrix approximately aligning the empirical distributions of the two ASEs, including when the corresponding graphs have (asymptotically) repeated singular (eigen) values.
+
+\subsection{Distance Correlation}
+Due to the equivalence between two-sample and independence testing \cite{exact-equivalence-2}, distance correlations (DCorr) can be used to test the equality of the distributions $F_X$ and $F_Y$. Define $Z=(X^\top, Y^\top)^\top\in\mathbb{R}^{N\times d}$ and $E=(0_n, 1_m)^\top\in\mathbb{R}^{N}$, where $N=n+m$. DCorr tests the independence of $Z$ and $E$ using some distance functions $\delta_Z:\mathbb{R}^{d}\times\mathbb{R}^{d}\rightarrow\mathbb{R}$ and $\delta_E:\mathbb{R}\times\mathbb{R}\rightarrow\mathbb{R}$. Here, $\delta_Z$ and $\delta_E$ denote the Euclidean norm in $\mathbb{R}^{d}$ and $\mathbb{R}$, respectively.
+
+First, DCorr computes distance matrices $D^Z, D^E$ such that $D^Z_{i,j} = \delta_Z(Z_i, Z_j)$ and $D^E_{i,j} = \delta_E(E_i, E_j)$. The distance matrices are then doubly centered to $D^{Z'}, D^{E'}$, where $D^{Z'}_{i,j} = D^Z_{i,j} - \overline{D^Z}_{\cdot,j} - \overline{D^Z}_{i,\cdot} + \overline{D^Z}_{\cdot,\cdot}$, and similarly for $D^{E'}$. Here the column means, row means, and the grand mean are $\overline{D^Z}_{\cdot, j} = \frac{1}{N}\sum_{i=1}^N D^Z_{i,j}$, $\overline{D^Z}_{i, \cdot} = \frac{1}{N}\sum_{j=1}^N D^Z_{ij}$, and $\overline{D^Z}_{\cdot, \cdot} = \frac{1}{N^2}\sum_{i=1}^N\sum_{j=1}^N D^Z_{ij}$, respectively. The sample DCorr test statistic \cite{szekely2014dcorr} is defined as
+\begin{align*}
+    \operatorname{DCorr}(Z,E) = \frac{1}{N(N-3)\sigma_{D^{Z'}}\sigma_{D^{E'}}}\sum_{i,j} D^{Z'}_{i,j}D^{E'}_{i,j},
+\end{align*}
+where $\sigma_{D^{Z'}}$ and $\sigma_{D^{E'}}$ are the standard deviation of values in $D^{Z'}$ and $D^{E'}$, respectively. A null distribution of this test statistic
+can be generated by permuting the indices of $E$ or approximated using an asymptotic result \cite{shen2019chi}.
+% TODONE cite cencheng's fast approximate paper here.
+
+The centered versions $D^{Z'}, D^{E'}$ have the property that all rows and columns sum to zero, but the test statistic is biased for finite samples. An unbiased version of DCorr modifies the centering method of the pairwise distance matrices \cite{szekely2014dcorr}. This method, called U-centering, generates a matrix $D^{Z''}$ that has the additional property that $E[D^{Z''}_{ij}] = 0, i, j = 1, \dots, N$. $D^{Z''}$ uses a slightly different form for the row means, column means, and grand mean, given by $\widetilde{D^{Z}}_{\cdot, j} = \frac{1}{N-2}\sum_{i=1}^N D^{Z}_{ij}$ (similarly for row means) and $\widetilde{D^{Z}}_{\cdot, \cdot} = \frac{1}{(N-2)(N-1)}\sum_{i,j} D^{Z}_{ij}$. The test statistic is defined analogously modulo these new definitions.
+
+\subsection{Multiscale Graph Correlation}
+An alternative method for approaching the hypothesis testing problem is MGC \cite{mgc-0, mgc-1, mgc-2}, which uses the distance-based methods in DCorr, but also considers the local scale of the data.
+MGC is based on unbiased DCorr, resulting in it also being unbiased. MGC consists of the following steps.
+
+\begin{enumerate}
+	\item Compute the centered distance matrices $D^{Z''}$ and $D^{E''}$.
+	\item For each $k,l$ in $1,\ldots, N$, compute the $k$ and $l$ nearest neighbors of each row of $D^{Z''}$ and $D^{E''}$, respectively, and denote the induced nearest neighbor graphs by $G^k\in\{0,1\}^{N\times N}$ and $H^l\in\{0,1\}^{N\times N}$.
+	\item Estimate the local normalized correlations $c^{k,l}$ such that
+	\begin{equation*}
+	c^{kl} = \frac{\sum_{i,j}D^{Z''}_{ij}D^{E''}_{ij}G^k_{ij}H^{l}_{ij}}{\left(\sum_{i,j}(D^{Z''}_{ij})^2G^k_{ij}\right) \left(\sum_{ij}(D^{E''}_{ij})^2H^{l}_{ij}\right)}.
+	\end{equation*}
+	\item Using a smoothing parameter $\tau$, estimate the smoothed maximum of $c^{kl}$ over all possible values of $k$ and $l$, defined as
+	\begin{align*}
+	R &= \text{LCC}\{(k,l):c^{kl}>\max(\tau,c^{NN})\},\\
+    c^\ast &= \max_{(k,l)\in R}c^{kl},
+	\end{align*}
+	where LCC denotes the largest connected component of the graph defined by a set of edges.
+\end{enumerate} 
+
+Similar to DCorr, the null distribution of the test statistic, $c^\ast$, is generated by permuting the indices of $E$.
+When the relationship is nonlinear or non-monotonic, MGC tends to choose scales smaller than $n$, detecting relationships more often than DCorr, and thus, it can be considered a direct generalization to the above methods, with often large finite sample power gains, with a minor running time cost \cite{mgc-0}.
+
+\section{Simulations}\label{sec:simulations}
+
+The performance of DCorr and MGC is analyzed by simulating graphs with different distributions. The graphs are simulated according to the RDPG model, using different distributions (described below) to generate their univariate latent positions $X=(x_1,\ldots, x_n)^\top$ and $Y=(y_1,\ldots, y_n)^\top$, and the latent positions are estimated via ASE with embedding dimension $\hat d= 1$. 
+% TODONE is d=1, or dhat, or both? please clarify.
+The sign ambiguity is resolved via median flip since the graphs are embedded into one dimension. The estimates are then used to compute the corresponding test statistics, and calculate the $p$-value after estimating the null distribution via permutation test. The tests reject at a significance level $\alpha=0.05$, and the empirical power is based on 1000 Monte Carlo replicates. This process is repeated for increasing numbers of vertices in each graph. The graph generating mechanisms are described next.
+
+\paragraph{Equal distribution of the latent positions}
+First, we analyze the performance of the methods when the null hypothesis is true, so the latent positions $X$ and $Y$ have the same distribution: $x_i \overset{\text{iid}}{\sim} F_X$ and $y_i \overset{\text{iid}}{\sim} F_X$, $i=1,\ldots,n$,
+with
+$F_X = \operatorname{Unif}(.2,.7)$.
+That is, these mutually independent sets of latent positions are uniformly distributed on the range $(.2, .7)$.
+Figure \ref{fig:simulations} (left) shows the empirical size of the tests for different numbers of vertices. The empirical power does not exceed $\alpha$, showing that both DCorr and MGC correctly control the type I error.
+ 
+\paragraph{Linear difference in the distributions}
+For this setting, we generate $x_i \overset{\text{iid}}{\sim} F_X$ and $y_i \overset{\text{iid}}{\sim} F_X + 0.1$ (Figure \ref{fig:simulations}, middle).
+As the number of vertices in each graph increases, the difference between the distributions becomes easier to detect, and both DCorr and MGC algorithms detect the differences, resulting in power increasing to unity at equal rate for both methods.
+
+\paragraph{Nonlinear difference in the distributions}
+Finally, set $x_i \overset{\text{iid}}{\sim} F_X$ and $y_i \overset{\text{iid}}{\sim} 0.5\operatorname{Beta}(.2, .2)+0.2$. Figure \ref{fig:simulations} (right) shows  the power of both DCorr and MGC goes to 1, but MGC dominates DCorr at  all sample sizes sample sizes until both tests achieve power of one.
+
+\begin{figure}[hbt!]
+    \centering
+    \includegraphics[width=\linewidth]{figures/nonpar/simulations.pdf}
+    \caption{Type I error and power vs. number of vertices ($n$) for detecting differences in the distribution of latent positions using different methods (DCorr and MGC). Dashed lines represent $\alpha=0.05$, and error bars represent $95\%$ confidence interval.
+    \textit{(Left)} When the distributions of the latent positions are identical, both methods are valid as power is near or at $\alpha=0.05$. \textit{(Middle)} When the distributions are linearly dependent, both methods are equally powerful and consistent. \textit{(Right)} When the distributions are nonlinearly dependent, both methods are consistent, but MGC is more powerful than DCorr.}
+    \label{fig:simulations}
+    % TODO figure captions always must say n & p, and refer to text where simulations are described. same comments for fig 2. 
 \end{figure}
 
-\blindtext
+\section{Synthetic and Real Data Applications}
+% In this section, we discuss applications to synthetic and real data using the \textit{Drosophila melanogaster} connectomes. 
+
+\paragraph{\textit{Drosophila melanogaster} brain}
+The connectomes, or brain graphs, of the \textit{Drosophila melanogaster} mushroom body was obtained in \citet{eichler2017complete}. The left brain graph ($A^L$) has $n=163$ neurons represented with the vertices, and the right brain graph ($A^R$) has $m=158$ neurons. Both graphs are binary with $A_{i j} \in \{0, 1\}$, symmetric with $A= A^\top$, and hollow with $\text{diag}(A) = \vec 0$. The edges of the data represent whether a synaptic connection exist between a pair of neurons or not.
+
+\paragraph{Synthetic Data Analysis}
+The performances of the two SVD alignment methods (median flipping and Optimal Transport Procrustes) and two hypothesis tests (DCorr and MGC) are analyzed by simulating synthetic data from the \textit{Drosophila} connectomes. Given an estimated latent position matrix $\hat X\in \mathbb{R}^{n\times d}$ obtained from one of the hemispheres (either $A^L$ or $A^R$), a pair of new latent position matrices are sampled, either with or without perturbation, to analyze the power and validity of various methods as a function of the number of vertices and the effect size. The latent position matrices, $\hat X$, are multivariate with $d=3$ for both hemispheres, which is given by the likelihood profile of eigenvalues \cite{zhu2006automatic}.
+
+The first step in data generation is to sample with replacement a set of $m$ vertices from the original graph. Let $\mathcal{P}\subseteq [n]$ be the set of indices for the randomly selected vertices, where $|\mathcal{P}|=m$. For each $i\in\mathcal{P}$, a pair of $d$-dimensional random latent positions $Y_i$ and $Z_i$ are independently generated
+via 
+\[Y_i \sim \mathcal{MVN}(\hat X_i, \hat\Sigma(\hat X_i)), \quad\quad \quad Z_i \sim  \mathcal{MVN}(\hat X_i + \epsilon_i, \hat\Sigma(\hat X_i)),\]
+where $\mathcal{MVN}(x, \Sigma)$  is a $d$-variate normal distribution with mean $x$ and covariance $\Sigma$, and $\hat\Sigma(\hat X_i)$ is the covariance matrix of the difference between $\hat{X}_i$ and  $X_i$ given by the central limit theorem in \citet{Athreya2015}, which is introduced to account for the fact that the true latent position $X_i$ is not observed. A random subset $\mathcal{O} \subseteq \mathcal{P}$ of the vertices are perturbed by adding $\epsilon_i$,  defined as 
+\begin{align*}
+\epsilon_j &\sim 
+\begin{cases}
+     \text{Unif}(\mathcal{S}^d_r), & \text{if}~j \in \mathcal{O}\\
+    \vec 0, & \text{otherwise},\\
+\end{cases}
+\end{align*}
+where $\text{Unif}(\mathcal{S}^d_r)$ is the uniform distribution on the surface of a $d$ dimensional sphere with radius $r$. Thus, $r$ represents the effect size, and $\rho = |\mathcal{O}| / m$ is the proportion of changed vertices. Given the new latent position matrices $Y$ and $Z$, a pair of undirected graphs $A$ and $B$ are generated by sampling the edges independently as $A_{ij}\sim\text{Bernoulli}(\min\{1, \max\{0, Y_i^\top Y_j\}\})$ and $B_{ij}\sim\text{Bernoulli}(\min\{1, \max\{0,Z_i^\top Z_j\}\})$, for $i>j$. $A$ and $B$ are symmetrized by setting $A_{ij} = A_{ji}$ and $B_{ij} = B_{ji}$.
+% TODONE that is how we sample the upper triangle, but then we do stuff to make it symmetric, please clarify. 
+
+\begin{figure}[b!]
+    \centering
+    \includegraphics[width=1\linewidth]{figures/nonpar/figure3.pdf}
+    \caption{
+    Type I error and power vs. number of vertices ($n$) using synthetic data generated from \textit{Drosophila} connectomes. The effect size, or the magnitude of the change in latent positions, is fixed at $r = 1$. The gray dashed line is $\alpha=0.05$.
+    Each row represents right or left hemisphere of the brain, and each column represents different proportion of vertices changed. When $\rho = 0$, the latent position distributions $F_V$ and $F_W$ are the same. Latent position alignment via median flip is invalid as shown in first column ($\rho = 0$) as type I error is above $\alpha$ and increasing with the size of the graphs; OTP resolves the invalidity of median flip. 
+    Testing via MGC is more powerful than testing via DCorr as shown in columns where $\rho = 0.5$ and $\rho = 1$.
+    Curves for median flip testing are omitted in the middle and right panels since using median flip results in an invalid test. 
+    }
+    \label{fig:synthetic_power}
+\end{figure}
+
+Once the new adjacency matrices $A$ and $B$ are sampled, latent positions are estimated with embedding dimension $\hat{d} = 3$, and then we test the hypothesis that the distributions used to generate their latent positions are the same. % via $(V, A)\sim\text{RDPG}_m( F_{V})$ and $(W, B)\sim\text{RDPG}_m( F_{W})$. The hypothesis $H_0: F_{V} = F_{W}$ vs $F_{V} \neq F_{W}$ is tested by estimating the latent positions via ASE then using both alignment methods (median flip and OTP) and test methods (DCorr and MGC). 
+The hypotheses are rejected at a significance level $\alpha=0.05$, and the empirical power based on 500 Monte Carlo replicates is reported. This process is repeated for increasing number of vertices with $m\in[20, 200]$, and proportion of changed vertices with $\rho \in \{0, 0.5, 1\}$, while keeping the effect size constant with $r = 1$ for both left and right \textit{Drosophila} mushroom body. The effect size is fixed because there is not enough influence on the power at smaller values of $r$.
+
+Figure \ref{fig:synthetic_power} shows that aligning the latent positions via the median flip yields invalid results for both DCorr and MGC. 
+Specifically, when $\rho=0$, both $Y$ and $Z$ are sampled from the same distribution, but both DCorr and MGC yield type I errors  greater than $0.05$ when testing via median flip. 
+The OTP alignment resolves the invalidity of the median flip as type I error is near $\alpha = 0.05$ at all sample sizes. 
+When $\rho>0$, the empirical power for both DCorr and MGC using OTP increases as the the sample size and proportion of vertices changed increases, showing that both methods are able to identify a significant difference between the distributions.
+Lastly, the MGC test statistic is more powerful than the DCorr test statistic in all scenarios where $\rho >0$.
+
+
+\paragraph{Left vs Right Larval \textit{Drosophila} Mushroom Body}
+
+The left and right \textit{Drosophila} mushroom body are similar, but not identical. To compare  these hemispheres, we test the difference of the distributions of the graph of the left mushroom body ($L$) and the graph of the right mushroom body ($R$).
+While the left and right mushroom body connectomes have different number of vertices, we did not correct the embeddings since the difference is small.
+The ASE of left and right hemispheres are denoted by $\hat{X}_L$ and $\hat{X}_R$ with assumed distributions $F_L$ and $F_R$, respectively.
+We test the hypothesis $H_0: F_L = F_R$ vs $H_1: F_L \neq F_R$ with various embedding dimensions, $\hat d \in \{1, 2, 3, 4, 5\}$. The $p$-values are shown in Table \ref{tab:pvals}.
+
+At lower embedding dimensions ($\hat d \in \{1, 2\}$), testing via median flip and OPT for MGC and DCorr do not reject the null. 
+However, at higher embedding dimensions ($\hat d \in \{3, 4, 5\}$), testing via median flip rejects the null, but testing via OPT does not for both MGC and DCorr. 
+Figure \ref{fig:drosophila} shows that the estimated latent positions of both hemisphere are similar, suggesting there is no difference in the distributions, but median flip misaligns the third dimension. 
+The misalignment causes MGC and DCorr to reject the null. 
+Thus, the left and right \textit{Drosophila} mushroom body are not significantly different.
+
+
+\begin{table}
+\centering
+\begin{tabular}{llllll}
+\toprule
+\textbf{Algorithm} &       \multicolumn{5}{c}{\textbf{$p$-value}}      \\
+\cmidrule(lr){2-6} 
+  &      $\hat d = 1$ &    $\hat d = 2$ &  $\hat d = 3$ & $\hat d = 4$ & $\hat d = 5$ \\
+\midrule
+MGC+OPT      &  \textcolor{ForestGreen}{0.986} &  \textcolor{ForestGreen}{1} &  \textcolor{ForestGreen}{1} &  \textcolor{ForestGreen}{0.999} &  \textcolor{ForestGreen}{0.952} \\
+DCorr+OPT    &  \textcolor{ForestGreen}{0.985} &  \textcolor{ForestGreen}{1} &  \textcolor{ForestGreen}{0.997} &  \textcolor{ForestGreen}{0.998} &  \textcolor{ForestGreen}{0.951} \\
+MGC+Median   &  \textcolor{ForestGreen}{0.993} &  \textcolor{ForestGreen}{1} &  \textcolor{Red}{0.001} &  \textcolor{Red}{0.001} &  \textcolor{Red}{0.001} \\
+DCorr+Median &  \textcolor{ForestGreen}{0.986} &  \textcolor{ForestGreen}{1} &  \textcolor{Red}{0.005} &  \textcolor{Red}{0.007} &  \textcolor{Red}{0.038} \\
+\bottomrule
+\end{tabular}
+\caption{P-values from testing for differences in distribution of the left and right \textit{Drosophila} mushroom body, specifically $H_0: F_L = F_R$ vs $H_1: F_L \neq F_R$ at various values of embedding dimension, $\hat d$. With $\alpha=0.05$, testing via optimal transport Procrustes and median flip do not reject the null hypothesis when $\hat d \in \{1, 2\}$. However, when $\hat d \geq 3$, testing via optimal transport Procrustes does not reject the null hypothesis, but testing via median flip does reject the null hypothesis when it should not. The green $p$-values correspond to successful alignment of latent positions, while red $p$-values correspond to misalignment of latent positions.}
+\label{tab:pvals}
+\end{table}
+
+
+\begin{figure}[t!]
+    \centering
+    \includegraphics[width=\linewidth]{figures/nonpar/figure3.pdf}
+    \caption{Embeddings for the \textit{Drosophila} connectomes after alignment with Optimal Transport Procrustes (left) and median flip (right) with embedding dimension $\hat d =3$. The diagonals are histograms of each dimension, upper off-diagonals are pairwise scatter plots, and lower off-diagonals are the difference of the kernel density estimates of the two embeddings. 
+    \textit{(Left)} OTP properly aligns all three dimensions. 
+    \textit{(Right)} Median flips results in misalignment in dimension 3 of the left hemisphere embedding. 
+    }
+    \label{fig:drosophila}
+\end{figure}
+
+
+\section{Discussion}
+
+The results presented herein demonstrate the improvement of the nonparametric two-sample graph testing presented in \cite{tang2014nonparametric} by aligning estimated latent positions via Optimal Transport Procrustes (OTP) and testing via multiscale graph correlation. For applications in connectomics, we show that the orthogonal nonidentifiabilities that arise from adjacency spectral embedding can significantly impacts the results. Specifically, the synthetic data experiments show that median flip can invalidate DCorr and MGC, but OTP resolves the inadequacy of median flip. Both simulated and synthetic experiments show that MGC is more powerful than DCorr when testing via OTP.  Thus, testing via OTP and MGC is not only more powerful, but also more trustworthy. While this work focuses on cases where the two graphs have the same number of vertices, the testing procedure can be extended to cases where the two networks have different number of vertices by correcting the variance of the estimated latent positions \cite{correcting-nonpar}.
+
+
+\section{Code}
+All code and data used in the analysis are available at \burl{https://github.com/neurodata/improving-latent-distribution-test}. 
+The analysis were performed using the \texttt{graspologic} (\burl{https://github.com/microsoft/graspologic}) and \texttt{hyppo} (\burl{https://github.com/neurodata/hyppo})  Python packages  \cite{chung2019graspy, panda2021hyppo}. 
+The methods described herein are implemented in \texttt{graspologic}.
