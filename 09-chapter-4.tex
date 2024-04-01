@@ -1,11 +1,11 @@
 \chapter[Two-Sample Graph Testing]{Valid Two-Sample Graph Testing via Optimal Transport Procrustes and Multiscale Graph Correlation with Applications in Connectomics} \label{chap:nonpar}
 
-This chapter documents our first investigation into the alpha blocker treatment hypothesis in humans facing a severe respiratory illness. Importantly, this study leveraged large insurance claims databases and common health conditions during a period where the COVID-19 data environment was too immature to produce a sufficiently large and well-understood sample for this analysis. This chapter was originally published in ELife in June 2021 (DOI:  http://jmlr.org/papers/v20/19-490.html) and is distributed under the terms of a Creative Commons Attribution License that permits unrestricted use and redistribution provided that the original author and source are credited.
+This chapter introduces
+This chapter documents our first investigation into the alpha blocker treatment hypothesis in humans facing a severe respiratory illness. Importantly, this study leveraged large insurance claims databases and common health conditions during a period where the COVID-19 data environment was too immature to produce a sufficiently large and well-understood sample for this analysis. This chapter was originally published in Stat in October 2021 (DOI:  \url{https://doi.org/10.1002/sta4.429}) and is distributed under the terms of a Creative Commons Attribution License that permits unrestricted use and redistribution provided that the original author and source are credited.
 
-\begin{singlespace}
-    \epigraph{\enquote{This is a large quote placed with \\ 
-    single spacing over two lines}}{-- Unknown author}
-\end{singlespace}
+\begin{singlespace}         % you can also use onehalfspace to relax the spacing
+    \fullcite{chung2022valid} \mybibexclude{chung2022valid}
+\end{singlespace} 
 
 \pagebreak
 \section*{Abstract}
@@ -147,14 +147,14 @@ First, we analyze the performance of the methods when the null hypothesis is tru
 with
 $F_X = \operatorname{Unif}(.2,.7)$.
 That is, these mutually independent sets of latent positions are uniformly distributed on the range $(.2, .7)$.
-Figure \ref{fig:simulations} (left) shows the empirical size of the tests for different numbers of vertices. The empirical power does not exceed $\alpha$, showing that both DCorr and MGC correctly control the type I error.
+Figure \ref{fig:simulations_nonpar} (left) shows the empirical size of the tests for different numbers of vertices. The empirical power does not exceed $\alpha$, showing that both DCorr and MGC correctly control the type I error.
  
 \paragraph{Linear difference in the distributions}
-For this setting, we generate $x_i \overset{\text{iid}}{\sim} F_X$ and $y_i \overset{\text{iid}}{\sim} F_X + 0.1$ (Figure \ref{fig:simulations}, middle).
+For this setting, we generate $x_i \overset{\text{iid}}{\sim} F_X$ and $y_i \overset{\text{iid}}{\sim} F_X + 0.1$ (Figure \ref{fig:simulations_nonpar}, middle).
 As the number of vertices in each graph increases, the difference between the distributions becomes easier to detect, and both DCorr and MGC algorithms detect the differences, resulting in power increasing to unity at equal rate for both methods.
 
 \paragraph{Nonlinear difference in the distributions}
-Finally, set $x_i \overset{\text{iid}}{\sim} F_X$ and $y_i \overset{\text{iid}}{\sim} 0.5\operatorname{Beta}(.2, .2)+0.2$. Figure \ref{fig:simulations} (right) shows  the power of both DCorr and MGC goes to 1, but MGC dominates DCorr at  all sample sizes sample sizes until both tests achieve power of one.
+Finally, set $x_i \overset{\text{iid}}{\sim} F_X$ and $y_i \overset{\text{iid}}{\sim} 0.5\operatorname{Beta}(.2, .2)+0.2$. Figure \ref{fig:simulations_nonpar} (right) shows  the power of both DCorr and MGC goes to 1, but MGC dominates DCorr at  all sample sizes sample sizes until both tests achieve power of one.
 
 \begin{figure}[hbt!]
     \centering
@@ -163,7 +163,7 @@ Finally, set $x_i \overset{\text{iid}}{\sim} F_X$ and $y_i \overset{\text{iid}}{
     [Type I error and power vs. number of vertices ($n$) for detecting differences in the distribution of latent positions using different methods (DCorr and MGC).]
     {Type I error and power vs. number of vertices ($n$) for detecting differences in the distribution of latent positions using different methods (DCorr and MGC). Dashed lines represent $\alpha=0.05$, and error bars represent $95\%$ confidence interval.
     \textit{(Left)} When the distributions of the latent positions are identical, both methods are valid as power is near or at $\alpha=0.05$. \textit{(Middle)} When the distributions are linearly dependent, both methods are equally powerful and consistent. \textit{(Right)} When the distributions are nonlinearly dependent, both methods are consistent, but MGC is more powerful than DCorr.}
-    \label{fig:simulations}
+    \label{fig:simulations_nonpar}
     % TODO figure captions always must say n & p, and refer to text where simulations are described. same comments for fig 2. 
 \end{figure}
 

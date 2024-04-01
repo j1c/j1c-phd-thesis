@@ -15,7 +15,9 @@ Conditional heritability can be considered equivalent to causal heritability und
 \begin{figure}
 \centering
 \includegraphics[width=0.8\linewidth]{figures/herit/dag.pdf}
-\caption{\textbf{Causal Graph of Study Covariates.} Causal directed acyclic graph (DAG) presents a visual representation of the potential relationships between the genome and connectome, in the context of a twin study. The descriptions depict the various attributes that may be considered as exposures, outcomes, and covariates in such a study. In the absence of confounding, associational effects can be considered as causal effects. However, conditional effects can only be considered as causal when the covariates measured are sufficient to close all backdoor paths.}
+\caption
+[Causal Graph of Study Covariates.]
+{\textbf{Causal Graph of Study Covariates.} Causal directed acyclic graph (DAG) presents a visual representation of the potential relationships between the genome and connectome, in the context of a twin study. The descriptions depict the various attributes that may be considered as exposures, outcomes, and covariates in such a study. In the absence of confounding, associational effects can be considered as causal effects. However, conditional effects can only be considered as causal when the covariates measured are sufficient to close all backdoor paths.}
 \label{fig:dag}
 \end{figure}
 
@@ -27,7 +29,9 @@ We used an open access human brain diffusion (dMRI) and structural magnetic reso
 \begin{figure}
     \centering
     \includegraphics[width=\linewidth]{figures/herit/3-composite.pdf}
-    \caption{\textbf{Visualization of connectomes as adjacency matrices using the projected Desikan parcellation with hemispheric labels.}  The projected Deskian parcellation was chosen for visualization purposes due to the low number of vertices ($n=70$). 
+    \caption
+    [Visualization of connectomes as adjacency matrices using the projected Desikan parcellation with hemispheric labels.]
+    {\textbf{Visualization of connectomes as adjacency matrices using the projected Desikan parcellation with hemispheric labels.}  The projected Deskian parcellation was chosen for visualization purposes due to the low number of vertices ($n=70$). 
     \textbf{(A)} Average connectome of all subjects with log-transformed edge weights. 
     \textbf{(B)} Absolute difference of connectomes from the most different pair of subjects with log-transformed edge weights.}
     \label{fig:data}
@@ -57,7 +61,9 @@ Columns I and II display four pairs of connectomes, each with specific latent po
 \begin{figure}
     \centering
     \includegraphics[width=\linewidth]{figures/herit/3-simulations.pdf}
-    \caption{\textbf{Simulations demonstrate the utility of connectome models.} Connectomes with $50$ vertices were simulated $100$ times. Columns (I-II) display the average simulated connectomes, while columns {(III-V)} illustrate the differences in latent positions averaged over these simulations. In columns (III-V), red corresponds to when subject $1$ had more edges than subject $2$, while blue corresponds to when subject $1$ had fewer edges. Rows (A-D) correspond to various parameters used to generate the connectomes. Connectomes in rows (A-C) share the same latent positions, subject to scaling transformations, whereas connectomes in row (D) have distinct latent positions, conditional on scaling transformations. When the connectome models accurately represent the generative process, the difference matrix displays a "uniform" structure without discernible patterns (A.III-V, B.IV-V, C.V). However, when connectome models are not appropriate, patterns emerge, as indicated by the increased distance values (B.III, C.III-VI, D.III-V).
+    \caption
+    [Simulations demonstrate the utility of connectome models.]
+    {\textbf{Simulations demonstrate the utility of connectome models.} Connectomes with $50$ vertices were simulated $100$ times. Columns (I-II) display the average simulated connectomes, while columns {(III-V)} illustrate the differences in latent positions averaged over these simulations. In columns (III-V), red corresponds to when subject $1$ had more edges than subject $2$, while blue corresponds to when subject $1$ had fewer edges. Rows (A-D) correspond to various parameters used to generate the connectomes. Connectomes in rows (A-C) share the same latent positions, subject to scaling transformations, whereas connectomes in row (D) have distinct latent positions, conditional on scaling transformations. When the connectome models accurately represent the generative process, the difference matrix displays a "uniform" structure without discernible patterns (A.III-V, B.IV-V, C.V). However, when connectome models are not appropriate, patterns emerge, as indicated by the increased distance values (B.III, C.III-VI, D.III-V).
     For further technical details of these simulations, see Appendix \ref{sup:simulations}.}
     \label{fig:simulations}
 \end{figure} 
@@ -76,9 +82,7 @@ The distribution of connectome distances is shown in Figure \ref{fig:main-result
 \includegraphics[width=\linewidth]{figures/herit/Desikan-composite.pdf}
 \caption
 [Testing associational and causal effect of genome on connectomes and neuroanatomy.]
-{
-% TODO make the legends two-tone so that non-significant is different than the significant results
-\textbf{Testing associational and causal effect of genome on connectomes and neuroanatomy.}
+{\textbf{Testing associational and causal effect of genome on connectomes and neuroanatomy.}
 \textbf{(A)} Each point represents the pairwise distance between pairs of participants; diamond markers represent the median distance, colors are familial relationships, and rows are sex. 
 \textbf{(A.i-iii)} The median distances revealed that MZ twins exhibited smaller distances compared to DZ twins, siblings, and unrelated pairs, whereas the unrelated pairs showed larger distances. DZ twins displayed smaller distances compared to siblings and unrelated pairs, but larger than those of MZ twins. These findings provide qualitative evidence of heritability of connectomes. 
 \textbf{(A.iv)} The median distances of neuroanatomy also show qualitative evidence of heritability. 
