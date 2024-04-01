@@ -1,0 +1,52 @@
+\section{Supplementary Materials}
+\subsection{Simulated Connectomes}\label{sup:simulations}
+In this section, we describe the parameters that were used to generate the simulated connectomes in Section \ref{sec:heritability_models}. In the following sections, we describe the formulation of an $\sbm$~as an $\rdpg$~and introduce the parameters used to generate simulated connectomes. 
+
+\subsection{Stochastic Block Model} \label{sec:sbm}
+\textit{Stochastic block model }($\sbm$) is a popular statistical model for networks \cite{holland1983stochastic}. In this model, the connection probability between vertex $i$ and $j$ is solely determined by which community $i$ and $j$ belong to. For $K$ communities, the vertices are divided into blocks, which is either deterministic or random, by the community membership indicators $\vec\tau = (\tau_1, \ldots, \tau_n)\in \set{1, \ldots, K}^n$. The matrix of probabilities is given by a $K\times K$ matrix $\Bmod$ with entries in $[0, 1]$. Each element of the adjacency matrix is then independently modelled as
+\begin{align*}
+    \A_{ij} &= \bern(B_{\tau_i\tau_j}).
+\end{align*}
+An \sbm\ can be also be parameterized as an $\rdpg$. In this case, community $l\in [K]$ has a $d$-dimensional latent vector $x_l$, and $\X=[x_{\tau_1}, \ldots, x_{\tau_n}]$ is an $n \times d$ matrix of latent positions where each row corresponds to the community latent position vertex $i$. We note that $d$ is at most $K$. Therefore, the adjacency matrix is modelled as
+\begin{align*}
+    \A_{ij} &= \bern(x_{\tau_i} x_{\tau_j}^\top).
+\end{align*}
+
+\subsubsection{Simulation Parameters}
+For all of the following simulations, we let the number of vertices $n=50$ and the number of communities $K=2$ with equal community sizes (e.g. $25$ vertices per community). The communities in the simulated connectomes can be thought of as a hemisphere (e.g. left and right) of the brain, and each vertex is a region within one of the two hemispheres. For each set of simulation parameters, we generated $100$ simulations. The average connectomes for simulated subjects $1$ and $2$ are shown in Figure \ref{fig:simulations}(i) and (ii) columns. We then computed the difference in their estimated positions based on the three models of connectomes, which are also averaged. The resulting average differences are shown in Figure \ref{fig:simulations}(iii-v) columns.  
+
+\paragraph{Exactly Same}
+ The latent position for vertices belonging to community $1$ is $x_1 = [1/4, 3/4]$ and those belonging to community $2$ is $x_2 = [3/4, 1/4]$. This results in the following block probability matrix:
+\begin{align*}
+    \Bmod = 
+    \begin{bmatrix}
+        0.625 & 0.375 \\
+        0.375 & 0.625
+    \end{bmatrix}
+\end{align*}
+These parameters simulate a simplified brain; that is, the number of connections within each hemisphere is larger than across hemispheres \cite{catani2012atlas}. If $U$ and $V$ denote adjacency matrices of subjects $1$ and $2$, then 
+\begin{align*}
+    U_{ij} \sim \bern(x_{\tau_i} x_{\tau_j}^\top), \quad & V_{ij} \sim \bern(x_{\tau_i} x_{\tau_j}^\top)
+\end{align*}
+where $\tau_i$ represents the community assignment for vertex $i$. In this case, the parameters of the two subjects are exactly the same.
+
+\paragraph{Same up to Global Scaling}
+Here, we introduce a global scale constant $c > 0$. The constant scales the connection probabilities of one subject. Then the adjacency matrices are sampled as:
+\begin{align*}
+    U_{ij} \sim \bern(x_{\tau_i} x_{\tau_j}^\top), \quad & V_{ij} \sim \bern(cx_{\tau_i} x_{\tau_j}^\top)
+\end{align*}
+with the same latent position vectors as above. We set $c=1.2$. Therefore, the two subjects have the same probability matrix conditioned on $c$.
+
+\paragraph{Same up to Vertex Scaling}
+Here, we introduce a degree-correction parameter that controls the expected degree of a vertex (e.g. number of edges that connect to a vertex) $\theta_i \in[0, 1]$. This model is known as the degree-corrected stochastic block model ($\dcsbm$). The degree correction parameters are defined as $\vec\theta = [1/25, 2/25, \ldots, 25/25, 1/25, 2/25, \ldots, 25/25]$, forming a vector with length $n$. Given the degree corrections, the adjacency matrices are sampled as:
+\begin{align*}
+    U_{ij} \sim \bern( x_{\tau_i} x_{\tau_j}^\top), \quad & V_{ij} \sim \bern(\delta_i\delta_j x_{\tau_i} x_{\tau_j}^\top)
+\end{align*}
+Therefore, the two subjects have the same probability matrix conditioned on $\vec\theta$. 
+
+\paragraph{Parameters for Different Connectomes}
+Here we introduce a different set of latent position for one of the subjects: $y_1 = [4/5, 2/5]$ and $y_2 = [2/5, 2/5]$. Given the same degree correction $\theta_i$ and $x_1, x_2$ as above, the adjacency matrices are sampled as:
+\begin{align*}
+    U_{ij} \sim \bern( y_{\tau_i} y_{\tau_j}^\top), \quad & V_{ij} \sim \bern(\delta_i\delta_j x_{\tau_i} x_{\tau_j}^\top)
+\end{align*}
+Therefore, the two subjects do not have the same probability matrix even after controlling for degree correction.

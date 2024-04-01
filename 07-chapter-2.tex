@@ -1,19 +1,14 @@
 \chapter{Heritability} \label{chap:heritability}
 
-%%%% OPTIONAL EPIGRAPH EXAMPLE
-% \epigraph{\enquote{Do not believe everything you see on the internet.}}{-- Albert Einstein}
+\pagebreak
+\section*{Abstract}
+The heritability of human connectomes - the maps of brain connectivity - is crucial for understanding the influence of genetic and environmental factors on variability in connectomes and their implications for behavior and disease. Unfortunately, current heritability methods can mistake correlation for causation or use models that oversimplify the intricate nature of brain networks, which risks misinterpreting the influence of genetics on brain connectivity patterns. To address these limitations, we propose a new approach that combines causal inference techniques to control for potential confounding with statistical models designed to capture the complex dependencies within brain networks. This allows us to explore more nuanced concepts of connectome heritability by systematically removing shared network structures. Applying our methods to diffusion connectomes derived from the Human Connectome Project, we show that brain connectivity is heritable heritability, even after adjustments for factors like neuroanatomy, age, and sex. However, once we address for common network between connectomes, our causal tests are no longer significant. These results suggest that previous conclusions on connectome heritability may be driven by the shared network structures. Thus, this work highlights the importance for future works to continue to develop data-driven heritability models which faithfully reflect potential confounders and network structures.
+\pagebreak
 
 
-%%%% MUST: add the citation for the chapter if it is a reprint or submitted paper
-%% you can use enumerate or itemize environment if you have more than one paper 
-%% \mybibexclude{} will exclude this citation from the final bibliography
-%% if this paper appears somewhere else then remove \mybibexclude{} command
-
-\begin{singlespace}         % you can also use onehalfspace to relax the spacing
-    This chapter is adapted from the following article with permission from ...
-    
-\end{singlespace} 
-
-
-%%%% remove the following and add your chapter text here
-\section{Introduction}
+\input{herit/2.introduction}
+\input{herit/3.results}
+\input{herit/4.discussion}
+\input{herit/5.methods}
+\input{herit/6.endnotes}
+\input{herit/7.appendix}

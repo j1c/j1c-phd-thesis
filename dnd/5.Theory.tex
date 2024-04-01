@@ -60,9 +60,9 @@ It is shown in Theorem 3.1 of \cite{tang2017semiparametric} that  $T_n$ is a con
 
 When the vertices of the graphs are not necessarily aligned (including cases in which the graphs do not have the same number of vertices), testing equality of latent positions is inappropriate. The work of \cite{tang2017nonparametric} proposes a nonparametric test to determine whether the distribution of the latent positions of the graphs is the same. For a pair of matrices $\X_n\in\Real^{n\times d}$ and $\Y_m\in\real^{m\times d}$ with their rows distributed as $(\X_n)_i\overset{\text{i.i.d.}}{\sim} F$ and $(\Y_m)_i\overset{\text{i.i.d.}}{\sim} G$ and a pair of independent adjacency matrices $\A_n\sim\rdpg(\X_n)$, $\B_n\sim\rdpg(\Y_n)$ , the nonparametric graph hypothesis testing problem is given by
 \begin{equation*}
-    \mathcal{H}^n_0:F \upVdash G \quad\quad\quad \text{ vs.}\quad\quad\quad \mathcal{H}^n_a: F \nupVdash G,
+    \mathcal{H}^n_0:F \perp G \quad\quad\quad \text{ vs.}\quad\quad\quad \mathcal{H}^n_a: F \not\perp G,
 \end{equation*}
-where $F\upVdash G$ indicates equality of the distributions up to an orthogonal transformation. To test such hypothesis, \cite{tang2017nonparametric} proposes to use the following test statistic
+where $F\perp G$ indicates equality of the distributions up to an orthogonal transformation. To test such hypothesis, \cite{tang2017nonparametric} proposes to use the following test statistic
 \begin{align*}
     U_{n,m}(\X, \Y)=& \frac{1}{n(n-1)}\sum_{j\neq i}\kappa(X_i, X_j)-\frac{2}{mn}\sum_{i=1}^n\sum_{k=1}^m\kappa(X_i, Y_k)\\
     & + \frac{1}{m(m-1)}\sum_{l\neq k}\kappa(Y_k, Y_l),

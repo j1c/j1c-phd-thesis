@@ -13,15 +13,6 @@ We simulate graphs from the homophilic planted partition $\sbm$  from Section \r
 % Under the null, the distributions $F_1, F_2$ of the two communities are identical, and under the alternative, the two distributions are different. 
 A relative effect size of $0$ corresponds to an $\er$ graph, in which $F_1 = F_2$; at all other relative effect sizes, the alternative is true. We measure performance using the statistical power at $\alpha = 0.05$ in Figure \ref{fig:siem_uwt}a(ii). Across the simulation settings, we see that Fisher's exact test provides an appropriate statistical test and provides sufficiently high  power with large enough effect size and graph. Importantly, Fisher's test displays  both empirical validity (at an effect size of zero, the power is at most $\alpha$) and empirical consistency (the test power converges to $1$ as the effect size increases) in both simulations.
 
-% TODONE only say SIEM when we absolutely need to please.
-% \begin{figure}
-%     \centering
-%     \includegraphics[width=.7\linewidth]{figures/dnd/siem_uwt_sim_plot.pdf}
-%     \caption{\textbf{Goodness of fit tests for binary independent edge model graphs}. We use Fisher's exact test to determine whether there exists a difference in probability between the two communities. \textbf{(A)} A depiction of the simulation settings of interest; the top row is a homophilic $\sbm$, with $K=2$ communities, where the two communities are the on-diagonal and off-diagonal blocks. The bottom row is a homotopic $\siem$, where the  two communities are the super/sub-diagonal bands, and the other edges in the graph. \textbf{(B)} Heatmaps depicting the statistical power at $\alpha = .05$ as a function of the number of vertices in the graph, and the relative effect size. An effect size of $0$ corresponds to an $\er$ graph.}
-%     \label{fig:uw_siem_os}
-% \end{figure}
-
-% TODONE it is just mushroom body right? let's clarify that everywhere we say 'connectome' please?
 We demonstrate our techniques developed above on the \textit{Drosophila} mushroom body, with $n=319$ vertices in the left or right hemisphere (2 vertices located along the center of the brain are excluded). In Figure \ref{fig:siem_uwt}b we investigate the appropriateness of different unweighted independent edge models for the \textit{Drosophila} mushroom body. Our goal is to identify whether the unweighted \textit{Drosophila} mushroom body display homophilia (that is, the within hemisphere blocks have greater connectivity than between hemisphere blocks) or homotopia (that is, edges incident bilateral vertices have a different distribution from edges incident non-bilateral vertices). Figure \ref{fig:siem_uwt}b(i) shows the unweighted \textit{Drosophila} mushroom body. The within-hemisphere blocks appear to have a higher proportion of edges than the between-hemisphere edge blocks, shown in Figure \ref{fig:siem_uwt}b(ii). There is strong evidence that the within-hemisphere connectivity exceeds the between-hemisphere connectivity (Fisher's exact test, $p$-value=$0.0$). Next, we investigate whether the graph is homotopic; that is, whether bilateral (homotopic) connectivity exceeds non-bilateral (heterotopic) connectivity, in Figure \ref{fig:siem_uwt}b(iii). Strong evidence is present that homotopic connectivity exceeds heterotopic connectivity (Fisher's exact test, $p$-value=$0.0$).
 
 Finally, we explore the appropriateness of various independent edge models for diffusion connectomes from the HCP Dataset. The diffusion connectomes are binarized according to whether an edge is present (the edge weight is greater than zero) or absent (the edge weight is zero). Figure \ref{fig:siem_uwt}c(i) shows the average unweighted diffusion connectome over all participants in the study. Figure \ref{fig:siem_uwt}c(ii) shows the distribution of edge-weights within-hemisphere versus between-hemisphere. The diffusion connectomes appear to possess homophily; i.e., high within-hemisphere connectivity, with lower between-hemisphere connectivity. This is demonstrated by the fact that in all $N$=$1059$, the within-hemisphere connectivity exceeds the between-hemisphere connectivity. This effect can be observed by looking at the difference between within-hemisphere connectivity and between-hemisphere connectivity for each of the $N=1059$ connectomes, shown in \ref{fig:siem_uwt}c(iii). All $1059$ diffusion connectomes have significantly higher within-hemisphere connectivity than between-hemisphere connectivity at $\alpha=.05$ after Bonferroni correction (Fisher's exact test, $N=1059$, maximum $p$-value$<10^{-20}$).
@@ -29,7 +20,9 @@ Finally, we explore the appropriateness of various independent edge models for d
 \begin{figure}
     \centering
     \includegraphics[width=.9\linewidth]{figures/dnd/siem_figure.pdf}
-    \caption{\textbf{Comparing communities of edges in graphs}. \textbf{a(ii)} Fisher's exact test shows reasonable statistical power across both homophilic and homotopic block structures in \textbf{a(i)}, with power converging to $1$ as effect size and number of vertices grow. \textbf{b(ii)} and \textbf{b(iii)} the \textit{Drosophila} mushroom body in \textbf{b(i)} shows both homophilic planted partition and homotopic structure (Fisher's exact test, $p$-values$=0$). \textbf{c(ii)} and \textbf{c(iii)} all $N=1059$ Human Connectome Project (HCP) diffusion connectomes show homophilic planted partition structure, with within-hemisphere connectivity exceeding between-hemisphere connectivity (Fisher's exact test, $N=1059$, Bonferroni corrected $p$-values$<10^{-21}$).}
+    \caption
+    [Comparing communities of edges in graphs.]
+    {\textbf{Comparing communities of edges in graphs}. \textbf{a(ii)} Fisher's exact test shows reasonable statistical power across both homophilic and homotopic block structures in \textbf{a(i)}, with power converging to $1$ as effect size and number of vertices grow. \textbf{b(ii)} and \textbf{b(iii)} the \textit{Drosophila} mushroom body in \textbf{b(i)} shows both homophilic planted partition and homotopic structure (Fisher's exact test, $p$-values$=0$). \textbf{c(ii)} and \textbf{c(iii)} all $N=1059$ Human Connectome Project (HCP) diffusion connectomes show homophilic planted partition structure, with within-hemisphere connectivity exceeding between-hemisphere connectivity (Fisher's exact test, $N=1059$, Bonferroni corrected $p$-values$<10^{-21}$).}
     \label{fig:siem_uwt}
 \end{figure}
 
@@ -40,36 +33,9 @@ Appendix \ref{sec:siem_wt} investigates the fit of independent edge models for w
 
 Recall that in Section \ref{sec:usbm}, that for the case of a $K=2$ $\sbm$, the matrix $\B$ with entries $\B_{kl}$ defines the probability of an edge connecting a vertex in community $k$ with a vertex in community $l$. By the bias-variance trade-off, simply supposing a unique entry for each block of $\B$ adds an additional level of complexity to the model, and may reduce the quality of inference, so the ability to make a principled decision when faced with numerous potential block structures is of importance. Formally, we are concerned with choosing one of the appropriate block structures from a subset of candidate block structures given in Section\ref{sec:usbm}, presenting a problem in model selection. Our hypotheses are the alternate candidate models, and our goal is to select the hypothesis corresponding to the candidate model that is most supported by the data by using the model with the lowest $p$-value.
 
-In Figure \ref{fig:sbm_uwt}a, we perform simulations where the true graph is either $\er$, Planted Partition, and Symmetric Heterogeneous, as shown in Figure \ref{fig:sbm_uwt}a(i). Effect size corresponds to the magnitude of the difference between disparate blocks in the model. We find that the $\chi^2$ test %\cite{Pearson1900}
-% TODO no need to cite pearson and fisher, we can cite a textbook if we want
-% TODO@jv: which one?
-% TODO@eb: doesn't matter, i tend to cite Rice
-% "If we want" does that mean you don't feel citations for chi2 and fisher's exact are "needed"?
-% TODO@jv it we want to cite anything, we cite a textbook here.
+In Figure \ref{fig:sbm_uwt}a, we perform simulations where the true graph is either $\er$, Planted Partition, and Symmetric Heterogeneous, as shown in Figure \ref{fig:sbm_uwt}a(i). Effect size corresponds to the magnitude of the difference between disparate blocks in the model. We find that the $\chi^2$ test 
 is an appropriate test for identification of block structure in unweighted graphs, and successfully recovers the correct block structure as the effect size and the number of vertices increases. Figure \ref{fig:sbm_uwt}a(ii) shows the test features both empirical validity and empirical consistency, as in Figure \ref{fig:siem_uwt}. 
 % Performance is worst for the Asy. Het. example, when each block has its own unique probability.
-
-% \begin{figure}
-%     \centering
-%     \includegraphics[width=.8\linewidth]{figures/dnd/uw_block_est.pdf}
-%     \caption{\textbf{$\chi^2$ test is appropriate for identification of appropriate block structure}. \textbf{(A)} a depiction of the simulations of interest, at $n=50$ vertices. The Planted Partition features the on-diagonal blocks sharing a probability that is distinct from the off-diagonal blocks of the $\B$ matrix. The Symmetric Heterogeneous (Sym. Het.) features the off-diagonal blocks sharing a probability, but the remaining blocks having a different probability. The Asymmetric heterogeneous (Asy. Het.) features each block having a unique probability. \textbf{(B)} Heatmaps depicting the statistical power at $\alpha = .05$ as a function of the number of vertices in the graph, and the relative effect size. As effect size increases and the number of vertices increases, the statistical power improves.}
-%     \label{fig:uw_nested_sbm_ts}
-% \end{figure}
-
-% TODONE i don't think we need (C) here either, it is just a column of (B), right?
-% TODO@jv take home message in caption is: chi2 is valid and consistent?
-% didn't you say to move that type of information to the content? I used to have that and you told me to move it to the paper itself rather than the caption.
-% TODONE@eb: see https://bitsandbrains.io/2018/09/08/figures.html on captions
-% TODONE@eb: change the names of models to reflect changes in the models sbm sections
-
-
-% \begin{figure}
-%     \centering
-%     \includegraphics[width=.7\linewidth]{figures/dnd/dros_sbm_est_uwt.pdf}
-%     \caption{\textbf{Identifying the appropriate block structure of the \textit{Drosophila} mushroom body}. We investigate the appropriate block structure in the unweighted \textit{Drosophila} mushroom body, with $n=319$ vertices in the left or right hemisphere. Each entry of the table corresponds to the number of edges with the indicated outcome (not connected or connected), and color indicates the percent of edges with the indicated outcome per block. The \textit{Drosophila} mushroom body possesses a planted partition structure ($\chi^2$ test, $p$-value=$0.0$).}
-%     \label{fig:dros_sbm_est_uwt}
-% \end{figure}
-% TODONE@eb shorten your captions please
 
 In Figure \ref{fig:sbm_uwt}b, we investigate the appropriate block structure for the unweighted \textit{Drosophila} mushroom body, which is shown in  shows the probability of an edge existing within each block of $\B$, where the $n=319$ vertices in either the left or right hemisphere are partitioned according to hemisphere. 
 % TODONE 'it would appear'? is this a soap opera? just state the results please ;)
@@ -85,7 +51,9 @@ Appendix \ref{sec:sbm_est_wt} proposes the use of several testing variants (ANOV
 \begin{figure}
     \centering
     \includegraphics[width=.8\linewidth]{figures/dnd/sbm_uwt.pdf}
-    \caption{\textbf{Estimating optimal block structure}. \textbf{a(ii)} $\chi^2$ test is effective for identifying the ideal block structure across disparate candidate block structures from \textbf{a(i)}, as power improves as both effect size and graph size increase. \textbf{b.} The \textit{Drosophila} mushroom body displays a planted partition structure ($\chi^2$ test, $p$-value=$0.0$), where \textit{(Left, Left)} and \textit{(Right, Right)} blocks share a different probability from the \textit{(Left, Right)} and \textit{(Right, Left)} blocks. \textbf{c.} Similarly, all $N=1059$ Human Connectome Project (HCP) diffusion connectomes show planted partition structure, with a similar interpretation to the \textit{Drosophila} result.}
+    \caption
+    [Estimating optimal block structure.]
+    {\textbf{Estimating optimal block structure}. \textbf{a(ii)} $\chi^2$ test is effective for identifying the ideal block structure across disparate candidate block structures from \textbf{a(i)}, as power improves as both effect size and graph size increase. \textbf{b.} The \textit{Drosophila} mushroom body displays a planted partition structure ($\chi^2$ test, $p$-value=$0.0$), where \textit{(Left, Left)} and \textit{(Right, Right)} blocks share a different probability from the \textit{(Left, Right)} and \textit{(Right, Left)} blocks. \textbf{c.} Similarly, all $N=1059$ Human Connectome Project (HCP) diffusion connectomes show planted partition structure, with a similar interpretation to the \textit{Drosophila} result.}
     \label{fig:sbm_uwt}
 \end{figure}
 
@@ -133,35 +101,25 @@ A network is sampled from the 4-block $\sbm$ model, and spectral clustering is p
 \begin{figure}
     \centering
     \includegraphics[width=0.7\textwidth]{figures/dnd/two_truths}
-    \caption{\textbf{Different clustering results from adjacency spectral embedding ($\ase$) and Laplacian spectral embedding ($\lse$).} For both $\ase$ and $\lse$, the network was embedded into $d=2$ dimensions, and Gaussian mixture modelling ($\gmm$) with $K=2$ clusters were fit. The dots represent vertices in the embedded space and the colors correspond to block memberships. The dashed black ellipses define the vertices that were clustered into same group.
+    \caption
+    [Different clustering results from adjacency spectral embedding ($\ase$) and Laplacian spectral embedding ($\lse$).]
+    {\textbf{Different clustering results from adjacency spectral embedding ($\ase$) and Laplacian spectral embedding ($\lse$).} For both $\ase$ and $\lse$, the network was embedded into $d=2$ dimensions, and Gaussian mixture modelling ($\gmm$) with $K=2$ clusters were fit. The dots represent vertices in the embedded space and the colors correspond to block memberships. The dashed black ellipses define the vertices that were clustered into same group.
     \textbf{a.} Clustering the embeddings from $\lse$ results in affinity clustering. 
     \textbf{b.} Clustering the embeddings from $\ase$ results in core-periphery clustering.}
     \label{fig:exp8}
 \end{figure}
 
-% TODONE are we doing summary points consistently? what is our policy? maybe one per section? 
-% TODO@jv integrated into paragraphs to save space
-% \begin{summary}[SUMMARY POINTS]
-% Clustering the results from different spectral embedding methods give different yet complementary results. 
-% \end{summary}
-
-
-% TODONE can we integrate these paragraphs & figures into the appropriate subsections? we have a mapping from simulation to real results, but they are far from each other, so that the reader needs to hold in her brain stuff for different applications.  in my head, after we talk about the simulations for homophylia and homotopia, the next paragraph does that on drosophila.  and the figure shows both the simulation and the real data together.
-% TODONE@j1: I agree; it was originally organized that way, but J1 did not like it and wanted all of sims together and all of drosophila together, so let's get his feedback? I imagined it as simulation, implementation of sim on real data, next simulation, next sim's real data app, etc. --eb
-% TODONE make adjacency matrix 2x the size, stack those 2 tables on top of each other.
-
-
 \subsection{Detecting Communities with Spectral Clustering}
 Many of the techniques described above rely on knowing an \textit{a priori} grouping of nodes or edges, but in many real-world examples this information is not available. Additionally, one may seek to discover communities in the network, either for modeling the network as a block-model or to reveal groups of similar nodes. 
 
 As described in Section \ref{sec:clustering_single}, one can embed a graph via $\ase$ or $\lse$ and then use $\gmm$ to reveal communities of nodes. Here, we separately embed both the left and right hemisphere induced subgraphs of the \textit{Drosophila} larva connectome using $\ase$ (see \cite{priebe2017semiparametric} for an extensive investigation) with $\hat d= 3$. $\gmm$ was performed independently on both hemispheres, with the clustering assignments and embeddings shown in Figure \ref{fig:mb-clustering}. Note that while the embedding and clustering of both hemispheres were performed separately, similar structures emerge for the left and right. In particular, each cluster is mostly comprised of a single cell type. Thus, spectral clustering can provide neuroscientists to find meaningful communities when the assignment is not known. 
-% TODONE can we say a little more about how good this clustering is please??
 
 \begin{figure}
     \centering
     \includegraphics[width = .8\linewidth]{figures/dnd/mb-clustering.pdf}
-    \caption{\textbf{Spectral clustering of the \textit{Drosophila} mushroom body network.} \textbf{a.} First ``in'' embedding dimension is plotted against the first ``out'' embedding dimension for both the left and right hemisphere networks (note that the clustering was performed in six dimensions, but only two are shown here for visualization). Each point represents a neuron, colored by its corresponding cell type. Ellipses show the clusters predicted by Gaussian mixture modeling, colored according to the cell type with the most frequent neurons in that cluster. Each color corresponds to one of Kenyon cells, input neurons, output neurons, and projection neurons. \textbf{b.} Stacked barplots showing each cluster's composition in terms of neuron cell type, for both the left and the right hemisphere clusterings. Each cluster is mostly comprised of a single cell type for both left and right hemisphere networks, meaning that spectral clustering can recover true communities. }
-    % TODONE state take home message please?
+    \caption
+    [Spectral clustering of the \textit{Drosophila} mushroom body network.]
+    {\textbf{Spectral clustering of the \textit{Drosophila} mushroom body network.} \textbf{a.} First ``in'' embedding dimension is plotted against the first ``out'' embedding dimension for both the left and right hemisphere networks (note that the clustering was performed in six dimensions, but only two are shown here for visualization). Each point represents a neuron, colored by its corresponding cell type. Ellipses show the clusters predicted by Gaussian mixture modeling, colored according to the cell type with the most frequent neurons in that cluster. Each color corresponds to one of Kenyon cells, input neurons, output neurons, and projection neurons. \textbf{b.} Stacked barplots showing each cluster's composition in terms of neuron cell type, for both the left and the right hemisphere clusterings. Each cluster is mostly comprised of a single cell type for both left and right hemisphere networks, meaning that spectral clustering can recover true communities. }
     \label{fig:mb-clustering}
 \end{figure}
 

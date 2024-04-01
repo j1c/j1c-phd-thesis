@@ -1,0 +1,188 @@
+\section{Methods}\label{sec:methods}
+\subsection{Causal Analysis for Heritability} %from batch effects
+Throughout this paper, we use $P_X$ to denote a generic distribution function and $f_X$ to denote a generic probability density or mass function for a random variable $X$, which we abbreviate $P$ and $f$ for simplicity. We use $P_{X|y}$ to denote the conditional distribution function of the random variable $X$ conditioned on $Y=y$. The corresponding conditional density/mass function is $f(Y=y|X=x)$, which we abbreviate $f(y|x)$. We let $X$ denote the $x\in\mathcal{X}$-valued random variable denoting the exposure, $Y$ denote the $y\in\mathcal{Y}$-valued random variable denoting the outcome, $Z$ denote the $z\in\mathcal{Z}$-valued random variable denoting the unmeasured covariates, and $W$ denote the $w\in\mathcal{W}$-valued random variable denoting the measured covariates. 
+Throughout, we assume that $(X, Y, Z, W)$ are sampled identically and independently from some true but unknown distribution (which implies exchangeability). In our investigation, the exposure $X$ is the genome conferred to an individual, the outcome $Y$ is an observed trait, such as the structural connectome, and $W$ are covariates regarding the individual which are known (sex, neuroanatomy, and age). For more details on definitions, please see \cite{bridgeford2023learning}.
+
+We are interested in estimating the effect of different exposures on the outcome of interest, which can be quantified using the backdoor formula under the assumption that $W$ and $Z$ close all backdoor paths
+\begin{align}
+    f_{w, z}(y|x) &= \int_{\mathcal{W}\times\mathcal{Z}}
+    f(y|x, w, z)f(w, z)\mathrm{d}(w, z) \label{eqn:backdoor}
+\end{align}
+Note that the above equation integrates over the \textit{unconditional} distribution of $W$ and $Z$, $f(w, z)$. This quantity can therefore be thought of as the distribution of the true outcome averaged over \textit{all} measured and unmeasured covariates. This contrasts from the notationally similar, but practically distinct, quantity $f(y|x)$, e.g.:
+\begin{align*}
+    f(y | x) &= \int_{\mathcal W \times \mathcal Z}{f(y | x, w, z) f(w, z | x)}\mathrm{d}{(w, z)}.     
+\end{align*}
+The key difference is that unlike Equation \eqref{eqn:backdoor}, $f(y | x)$ averages the true outcome distribution, $f(y | x, w, z)$, over the \textit{conditional} distribution of the measured and unmeasured covariates, $f(w, z | x)$. This has the implication that if $f(w, z|x)$ is not the same as $f(w,z|x')$, $f(y|x)$ represents an average over a different covariate distribution than $f(y|x')$.
+
+\subsubsection{Idealized Causal Heritability}
+Given the setup above, we say that \textit{causal heritability} of a trait exists if and only if:
+\begin{align}
+    f_{w, z}(y|x) &\neq f_{w, z}(y)\label{defn:causal_heritability}
+\end{align}
+and we can construct a hypothesis as follows:
+\begin{align}
+    H_0: f_{w, z}(y|x) = f_{w, z}(y) \quad &\text{vs} \quad 
+    H_A: f_{w, z}(y|x) \neq f_{w, z}(y).
+    \label{eq:causal-hypothesis}
+\end{align}
+The null hypothesis states that there is no average causal effect; that is, the genome (exposure) has no effect on the connectomes, and this test can be formalized as an independence test.
+The key limitation of this characterization of heritability is that the estimand of interest $f_{w, z}(y|x)$ requires an integration over the unconditional distribution of the measured and unmeasured covariates, $f(w, z)$, which we will not have in practice due to the fact that the covariates $Z$ are unknown. Therefore, the above hypothesis test is not feasible since it would not be possible to formulate principled estimators of the estimand $f_{w, z}(y|x)$. In the following sections, we establish a series of related effects while establishing the specific conditions under which the existence of causal heritability effect can be inferred from the effect of interest. It is important to note that the validity of any causal assertions is contingent upon the extent to which these underlying assumptions accurately represent the data.
+
+\subsubsection{Associational Heritability} \label{sec:ass-effect}
+We only observe the pairs $(x_i, y_i)$ for $i \in [n]$. Therefore we will only be able estimate functions of $(X,Y)$. We say that \textit{associational heritability} of a trait exists if:
+\begin{align*} \label{eq:ass}
+    f(y|x) &\neq f(y)
+\end{align*}
+and we can construct a hypothesis as follows:
+\begin{align}
+    H_0: f(y|x) = f(y) \quad &\text{vs} \quad 
+    H_A: f(y|x) \neq f(y).
+    \label{eq:ass-hypothesis}
+\end{align}
+
+Under what circumstances can associational heritability be considered equal to causal heritability? A sufficient assumption for the equivalence of these two effects is that the measured and unmeasured covariates $(W,Z)$ are non-confounding, which is the case when $(X, Y)$ is independent of $(W, Z)$. However, this assumption is often not reasonable. For example, if the size of human brains is associated with structural connectomes, then differences in $f(y|x)$ and $f(y)$ could be due to genetics or neuroanatomy, making it challenging to differentiate between causal and associational effects. This motivates the following approach.
+
+\subsubsection{Conditional Heritability} \label{sec:cond-effect}
+We observe the triples $(x_i, y_i, w_i)$ for $i\in[n]$. Thus, we will only be able to estimate the functions of $(X, Y, W)$. Thus, a \textit{conditional heritability} of a trait exists if:% and the hypothesis test proposed in Equation \ref{eq:hypothesis} can be redefined as
+\begin{align*} 
+    f(y|x, w) \neq f(y|w)
+\end{align*}
+and we can construct a hypothesis as follows:
+\begin{align}
+    H_0: f(y|x, w) = f(y|w) \quad &\text{vs} \quad 
+    H_A: f(y|x, w) \neq f(y|w).
+    \label{eq:conditional-hypothesis}
+\end{align}
+
+Under what circumstances can conditional heritability be considered equal to causal heritability? A sufficient condition for these two effects to be equivalent is that the strong ignorability assumption is satisfied \cite{rosenbaum1983central}. Strong ignorability consists of two conditions:
+\begin{enumerate}[leftmargin=*]
+    \item The exposure is independent of the potential outcomes, conditioned on the observed and unobserved covariates $(W,Z)$: $X\indep Y|  W, Z$.
+    \item The distributions of the observed and unobserved covariates have sufficient overlap among the exposure. Specifically, for all $(w, z) \in \mathcal{X} \times \mathcal{Z}$, $0 < \PP(X=x | W=w, Z=z) < 1$.
+\end{enumerate}
+The first condition of strong ignorability can be specified in terms of backdoor paths, which are a set of paths between the exposure and the outcome that are not part of the causal pathway. These paths can create a spurious correlation between exposure and outcome if they are not properly controlled for. Therefore, if all backdoor paths between the exposure and outcome are blocked by conditioning on a set of observed covariates, then the exposure is rendered independent of potential outcomes. In other words, the observed covariates are assumed to be sufficient to control for all confounding variables, including unmeasured covariates,  that could influence exposure and outcome. Thus, the main limitation of the conditional effect is that there must be no unmeasured confounding, which is an untestable assumption.
+
+In the context of backdoor paths, the covariate overlap condition ensures that there is adequate variation in the covariates to block all the backdoor paths between the exposures and the outcomes. For example, if there is a subset of the population with extreme values of the covariates where no one is given a particular exposure, then it will be impossible to estimate the effect of the exposure in that subgroup. 
+
+\subsubsection{Conditional Heritability for Vertices} \label{sec:cond-effect-vert}
+Here 
+We observe the triples $(x_i, y_i, w_i)$ for $i\in[n]$, but instead consider each individual vertex, or a region of the brain. Thus, condiTo identify the non-heritable subgraphs, we modify the hypothesis in Eq. \ref{eq:conditional-hypothesis} to allow for vertex-wise testing:
+\begin{align}
+    H_0: f(y^k|x^k, w^k) = f(y^k|w^k) \quad &\text{vs} \quad 
+    H_A: f(y^k|x^k, w^k) \neq f(y^k|w^k).
+    \label{eq:vertex-wise-conditional-hypothesis}
+\end{align}
+where $k$ indexes a particular vertex, and $y^k$ is a matrix of latent positions from all connectomes for vertex $k$. After computing a p-value for each vertex, those with p-values less than $\alpha=0.05$ after multiple hypothesis correction were discarded. The remaining set of vertices induces the non-heritable subgraphs. We then tested for conditional heritability of the non-heritable subgraphs as in Eq. \ref{eq:conditional-hypothesis}. 
+
+\subsubsection{Hypothesis Tests for Discovering Heritability} \label{sec:method-dcorr}
+Classical statistical tests such as Student's t-test, one-way analysis of variance ($\anova$), and their multivariate counterparts, such as Hotelling's $T^2$ test and multivariate analysis of variance (\texttt{MANOVA}), are not well-suited for testing heritability in twin studies due to the inherent structure of the data. Specifically, the familial relationships (e.g. monozygotic twins, dizygotic twins) depend on which pair of subjects being examined rather than the individuals. For instance, consider two families, each with a set of monozygotic twins. Within families, the subjects are considered as monozygotic twins, but when compared across families, they are considered as unrelated subjects. Consequently, although both pairs are classified as monozygotic twins, they cannot be combined into a group for subsequent analysis. To address this issue, some studies examine within family pair differences rather than individual observations. However, this approach introduces another challenge: the pairwise differences are not independent. For example, in a family with one monozygotic twin pair and a non-twin sibling, there are three possible pairings (one twin pair and two non-twin sibling pairs). When comparing the connectomes of all possible pairs among the three individuals, the twins would be used for comparison in both the monozygotic and sibling groups.
+
+Distance correlation ($\dcorr$) is a non-parametric test that can detect linear and non-linear dependency between two multivariate variables, and resolves the issue of pairwise dependence \cite{szekely2007measuring, szekely2014partial}. The first step in $\dcorr$\ is to compute the distance matrices for the variables being compared. These matrices represent the distances, or differences, between all possible pairs of observations in the dataset. By working with distance matrices, $\dcorr$\ inherently takes into account the relationships between pairs of observations. Therefore, we used distance correlation to test the hypothesis of associational effect (Eq. \ref{eq:ass-hypothesis}). To test the hypothesis of causal effect (Eq. \ref{eq:conditional-hypothesis}), we use the conditional distance correlation ($\cdcorr$), which augments the $\dcorr$\ procedure by conditioning on the kernel of third variable \cite{wang2015conditional}. In the following section, we present models and methods of computing distances between a pair of connectomes. 
+
+\subsection{Network Construction} \label{sec:network_construction}
+Connectomes were estimated using the \texttt{ndmg} pipeline \cite{Kiar188706}, which is designed to process and generate connectomes from human dMRI and sMRI that minimizes batch effects across datasets. We note that higher b-values than $1000$ were discarded prior to preprocessing. The dMRI scans were first denoised from Gibbs ringing using DiPy's \texttt{gibbs-removal}, and then were pre-processed for eddy currents using FSL's \texttt{eddy-correct} \cite{fsl1}. The results were denoised using DiPy's \texttt{Local PCA}. FSL's ``standard'' linear registration pipeline was used to register the sMRI and dMRI images to the MNI152 atlas \cite{fsl1,fsl2,fsl3,mni152}. A constant solid angle orientation distribution function (CSA-ODF) model is fit using DiPy \cite{dipy} to obtain an estimated tensor at each voxel. A local deterministic tractography algorithm is applied using DiPy's \cite{dipy} to obtain streamlines, which indicate the voxels connected by an axonal fiber tract. Given a parcellation with vertices $V$ and a corresponding mapping $P(v_i)$ indicating the voxels within a region $i$, we contract our fiber streamlines as follows. $w(v_i, v_j) = \sum_{u \in P(v_i)}\sum_{w \in P(v_j)} \mathbb{I}\left\{ F_{u, w} \right\}$ where $F_{u, w}$ is true if a fiber tract exists between voxels $u$ and $w$, and false if there is no fiber tract between voxels $u$ and $w$. Several parcellations were used to generate connectomes, such as the Schaefer \cite{schaefer2018local}, AAL \cite{tzourio2002automated}, Glasser \cite{glasser2016multi} and a projection of the Desikan parcellation \cite{desikan2006automated} to sub-cortical white-matter structures \cite{Lawrence2021Mar}.
+
+\subsection{Network Preliminaries} \label{sec:graph}
+Networks (or graphs) are convenient mathematical objects for representing connectomes. A network $G$ consists of an ordered set $(V, E)$ where $V$ is the vertex set, and $E$ is the set of edges. The set of vertices is represented as $V=\{1, 2, \ldots, n\}$ where $|V| = n$. The set of edges is a subset of all possible edges (e.g. $E\subset V\times V$). An edge exists between vertex $i$ and $j$ if $(i, j)\in E$. A network can also be represented by its adjacency matrix $\A \in \mathbb R^{n\times n}$ where each element, $\A_{ij}$, represents the edge between vertices $i$ and $j$. In many connectomics datasets, edges have associated weights that represents some notion of strength of connections between two vertices. For example, edge weights from structural connectomes are non-negative integers that represent the number of estimated fiber tracts between two brain regions. 
+
+\subsection{Statistical Model for Connectomes} \label{sec:statistical-models}
+Connectomes can be modeled using statistical models designed for network data. These statistical models consider the entire network as a random variable, including the inherent structure, dependencies within networks, and the noise in observed data \cite{goldenberg2010survey, kolaczyk2014statistical, chung2021statistical}. In the following sections, we define the \textit{random dot product graph} ($\rdpg$) \cite{athreya2018, sussman2012consistent}, how the parameters can be estimated from observed data, and then define the testing procedure. 
+
+\subsubsection{Random Dot Product Graph Model}  \label{sec:rdpg}
+The Random Dot Product Graph ($\rdpg$) is a type of independent edge model. In this model, each element of an adjacency matrix is sampled independently from a Bernoulli distribution:
+\begin{align*}
+    \A_{ij} \sim \bern(\P_{ij})
+\end{align*}
+Given the number of vertices $n$, the matrix $\P$ is a $n\times n$ matrix of edge-wise connection probabilities with elements in $[0, 1]$. We can construct various models depending on the constraints imposed on $\P$. Note that we assume that $\P$ has no self-loops (i.e. $\text{diag}(\P) = \vec 0$) and is undirected (i.e. $\P^\top = \P$). 
+
+In the random dot product graph ($\rdpg$), the probability of a connection $\P_{ij}$ is determined by the vertices. Each vertex $i\in V$ is associated with a low-dimensional \textit{latent position} vector, $\X_i$, in the Euclidean space $\RR^d$. The probability of connection between vertices $i$ and $j$ is given by the dot product (i.e $\P_{ij} = \X_i \X_j^\top$). Thus, in a $d$ -- dimensional $\rdpg$\ with $n$ vertices, the rows of the matrix $\X\in\RR^{n\times n}$ are the latent positions of each vertex, and the matrix of edge-wise connection probabilities is given by $\P=\X\X^\top$. Each element of the adjacency matrix is then independently modelled as
+\begin{align*}
+    \A_{ij} &= \bern(\X_i \X_j^\top)
+\end{align*}
+where $\X_i$ and $\X_j$ are latent positions for vertices $i$ and $j$, respectively.
+
+We acknowledge that the original intention of $\rdpg$\ is to model binary networks, although the model can be naturally extended to handle weighted networks. However, the weighted $\rdpg$\ models are not well studied, and as such does not enjoy the same statistical guarantees. In the subsequent section, we present an algorithm for estimating latent positions from observed data and describe methods for preprocessing the data to enable interpretation of results within the context of binary networks while still utilizing weighted network data.
+
+\subsubsection{Adjacency Spectral Embedding}
+The modeling assumptions of the $\rdpg$\ make the estimation of latent positions, which are usually unobserved in practice, analytically tractable. The estimation procedure we use is \textit{adjacency spectral embedding} ($\ase$) \cite{ase-consistency-1}. The $\ase$~ of an adjacency matrix $\A$ into $d$-dimensions is $\hatX = \hatU|{\hatS}|^{1/2}$, where $|\hatS|$ is a diagonal $d \times d$ matrix containing on the main diagonal the absolute value of the top-$d$ eigenvalues of $\A$ in magnitude, in decreasing order, and $\hatU$ is an $n\times d$ matrix containing the corresponding orthonormal eigenvectors. This simple and computationally efficient approach results in consistent estimates $\hatX$  of the true latent positions $\X$ \cite{ase-consistency-1,ase-consistency-2, ase-consistency-3}. The $\ase$\ depends on a parameter $d$ that corresponds to the rank of the expected adjacency matrix conditional on the latent positions; in practice, we estimate this dimension, $\hat d$, via the scree plot of the eigenvalues of the adjacency matrix which can be done automatically via a likelihood profile approach \cite{zhu2006automatic}.
+
+Structural connectomes have weighted edges (i.e. non-negative integers) and have no self-loops. To improve estimation of latent positions via $\ase$, we implement two preprocessing steps in order: 1) \textit{pass-to-ranks} ($\ptr$), and 2) \textit{diagonal augmentation} ($\daug$). $\ptr$\ is a method for rescaling the \textit{positive} edge weights such that all edge weights are in $[0, 1]$. The motivation of $\ptr$\ is to convert the edge weights such that its distribution is uniform \cite{Kiar188706, tang2018connectome}. Given an adjacency matrix $\A \in \Real^{n\times n}$, let $R(\A_{ij})$ be the ``rank'' of $\A_{ij}$, that is, $R(\A_{ij}) = k$ if $\A_{ij}$ is the $k^{th}$ smallest element in $\A$. The rescaled adjacency matrix, $\widetilde{\A}$, is:
+\begin{align*}
+    \widetilde{\A}_{ij} &= \begin{cases}
+    \frac{R(\A_{ij})}{|E|} & \text{if $\A_{ij} > 0$}\\
+    0 & \text{otherwise}
+    \end{cases}
+\end{align*}
+where $|E|$ is the number of non-zero edges. Ties in rank are broken by averaging the ranks. $\daug$\ is a method for augmenting the diagonal of an adjacency matrix. Given an adjacency matrix $\A \in \Real^{n\times n}$, the diagonal augmented matrix $\bar\A=\A + \D$  where $\D\in\Real^{n\times n}$ is a diagonal matrix with entries $\D_{ii} = \sum_{j=0}^n \A_{ij}$.
+
+\subsection{Distance Measures for Distance Correlation and Conditional Distance Correlation} 
+The hypothesis testing procedures in Section \ref{sec:method-dcorr} require functions to quantify dissimilarity (distances) or similarities between pairs of observations. In the following sections, we detail the functions used to compute the distance matrices for connectomes and genomes, and the kernel matrix for covariates. 
+
+\subsubsection{Distances of Connectomes}\label{sec:method-connectome-models}
+In \cite{tang2017}, the authors proposed three methods for calculating the distance between two networks under the $\rdpg$\ model. Rather than comparing the high-dimensional connectomes directly, we first obtain low-dimensional latent positions of the connectomes via $\ase$\ and then compared these new representations. Each method makes different assumptions about the structure of the connectomes, providing different interpretations of the results.
+
+Let $\A^{(1)}$ and $\A^{(2)}$ be $n\times n$ adjacency matrices, and let $\hatX$ and $\hatY$ be  $n \times d$ latent position matrices from their respective $\ase$. The distance metrics are defined as:
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Exact Model}:
+    \begin{align}
+    d(\hatX, \hatY) &= \min_{\W } \|\hatX\W-\hatY\|_F \label{eq:exact}
+    \end{align}
+    where $\W$ is a $d \times d$ orthogonal matrix that is estimated by solving the orthogonal Procrustes problem. 
+    \item \textbf{Global Model}:
+    \begin{align}
+    % d(\hatX, \hatY) &= \min_{c,\W } \|\hatX\W-c\hatY\|_F \label{eq:global}
+    d(\hatX, \hatY) &= \min_{\W }
+    \frac{\norm{\hatX \W/\norm{\hatX}_F - \hatY /\norm{\hatY}_F }_F}
+    {1/\norm{\hatX}_F + 1/\norm{\hatY}_F}
+    \end{align}
+    Note that a scaling constant is not estimated directly but the effect of scaling is removed by ensuring all latent position matrices have the same scale by normalizing by their respective Frobenius norms.
+    \item \textbf{Vertex Model}: 
+    For any matrix $\mathbf Z$ with shape $n\times d$, we define the $\mathcal{D}(\mathbf{Z})$ as a diagonal $n\times n$ matrix whose main diagonal entries are the Euclidean norm of the rows of $\mathbf{Z}$. Let $\mathcal{D}^{-1}(\mathbf Z)$ be defined as $1/(\min_i \norm{\mathbf Z_i})$, and let $\mathcal{P}(\mathbf{Z})$ be the matrix whose rows are the projection of the rows of $\mathbf{Z}$ onto the unit sphere. Then the distance is defined as:
+    \begin{align}
+    % d(\hatX, \hatY) &=  \min_{\D,\W} \|\hatX\W-\D\hatY\|_F \label{eq:vertex}
+    d(\hatX, \hatY) &=\min_{\W} \frac{\norm{\mathcal{P}({\hatX}) \W - \mathcal{P}(\hatY)}_F}{\norm{\mathcal{D}^{-1}(\hatX)}_2 + \norm{\mathcal{D}^{-1}(\hatY)}_2}
+    \end{align}
+     % Note that if the scaling matrix $\D$ contains on the main diagonal the same constant $c$, then the {vertex model} is equivalent to the {global model}.
+\end{enumerate}
+
+\subsubsection{Distances of Genomes}
+Genomes are costly and challenging to measure, but their similarity can be estimated even without measurements by making strong assumptions. The coefficient of kinship ($\phi_{ij}$) is commonly used, which represents the probability that two individuals (subjects $i$ and $j$) have the same allele or a DNA sequence at a random position in the genome \cite{speed2012improved}. For instance, monozygotic twins have an identical genome but two possible alleles since humans have two copies of a gene, resulting in a coefficient of $\phi_{ij}=1/2$. On the other hand, dizygotic twins and siblings share 50\% of the genome on average, resulting in a coefficient of $\phi_{ij}=1/4$. Therefore, the distance between two genomes $G_i$ and $G_j$ is defined as:
+\begin{align*}
+    d(G_i, G_j) &= 1- 2\phi_{ij}
+\end{align*}
+Table \ref{tab:genetic-distances} enumerates all the possible distances. In the context of distance correlations, we note that any monotonic transformations of the values given to the genetic distance are equivalent as long as the ordinality remains.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{l|ll}
+Relationship & $\phi_{ij}$   & $1-2\phi_{ij}$ \\\hline
+Monozygotic  & $\frac{1}{2}$ & $0$            \\
+Dizygotic    & $\frac{1}{4}$ & $\frac{1}{2}$  \\
+Siblings     & $\frac{1}{4}$ & $\frac{1}{2}$  \\
+Unrelated   & $0$ & $1$
+\end{tabular}
+\caption{Genomic distances given by coefficient of kinships.}
+\label{tab:genetic-distances}
+\end{table}
+
+\subsubsection{Similarity/Distances of Covariates} \label{methods:covariates}
+In Section \ref{sec:neuroanatomy-dcorr}, we explored how genomes influence neuroanatomy by measuring brain volume, radial diffusivity (RD), axial diffusivity (AD), and fractional anisotropy (FA). These features were estimated per region of interest (ROI) defined by a parcellation, using the processed images obtained during network construction. RD is a measure of diffusion perpendicular to the axonal fibers, and it reflects the degree of damage or demyelination in the white matter. AD, on the other hand, is a measure of diffusion parallel to the axonal fibers and reflects the integrity and density of the axonal fibers. FA is a measure of the degree of anisotropy or directionality of water diffusion and reflects the coherence and organization of the white matter. We computed the average of these features across all regions, and we normalized the data by dividing each feature by its maximum value.
+
+In order to perform the hypothesis test using $\dcorr$\ in Section \ref{sec:neuroanatomy-dcorr}, we first compute the distance matrix for neuroanatomy. Let $w_i, w_j \in \RR^d$ be measurements of observed covariates from subject $i$ and $j$ with dimensionality $d$. Then the distance function is simply given by the Euclidean norm:
+ \begin{align*}
+     d(w_i, w_j) &= \norm{w_i- w_j}_2
+ \end{align*}
+
+On the other hand, $\cdcorr$\ requires a similarity matrix of the conditioning covariates, which includes the four neuroanatomy features and age. Age is normalized by dividing by the maximum age of the dataset. As before, let $w_i, w_j \in \RR^d$ be measurements of observed covariates from subject $i$ and $j$ with dimensionality $d$. The kernel function is
+\begin{align*}
+    K(w_i, w_j) &= \parens{2\pi}^{\frac{1}{d}}\abs{\mathbf{H}}^{\frac{1}{2}}\exp\parens{\frac{1}{2}(w_i - w_j)^\top \mathbf H^{-2}(w_i - w_j)}
+\end{align*}
+where $\mathbf H$ is a $d \times d$ diagonal matrix containing on the main diagonal the kernel bandwidth $(h_1, \ldots, h_d)$. While many methods exist for estimating the bandwidth, we chose a plug-in rule given by \cite{scott2015multivariate}:
+
+\begin{align*}
+    h_i &= n^{-1/(d+4)} \hat\sigma_i
+\end{align*}
+where $n$ is the number of observations, $d$ is the dimensionality of each observation, and $\hat\sigma_i$ is the estimated standard deviation for dimension $i$. 
+
+\subsection{$p$ - values and Multiple Hypothesis Correction}
+All $p$-values from $\dcorr$\ and $\cdcorr$\ tests are estimated using $N=25$,$000$ permutations. Across all figures and tables associated with this work, we are concerned with obtaining a proper estimate of the rate at which we detect effects (\textit{discoveries}). Therefore, we control the false discovery rate (FDR) with the Benjamini-Hochberg Correction \cite{benjamini1995controlling}. 
+

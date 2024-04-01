@@ -13,7 +13,9 @@ Given a new connectome, where the correspondence between neurons is not known, t
 \begin{figure}
     \centering
     \includegraphics[width = .8\linewidth]{figures/dnd/mb-matching.pdf}
-    \caption{\textbf{Graph matching on the \textit{Drosophila} mushroom body network.} All panels show the first two dimensions of principal component analysis $\sct{PCA}$ on the adjacency spectral embedding ($\ase$) of the mushroom body network (for visualization purposes). Each point represents a neuron in the network which has a manually identified pair in the opposite hemisphere, and colors represent one of Kenyon cells, input neurons, output neurons, and projection neurons. 
+    \caption
+    [Graph matching on the \textit{Drosophila} mushroom body network.]
+    {\textbf{Graph matching on the \textit{Drosophila} mushroom body network.} All panels show the first two dimensions of principal component analysis $\mathtt{PCA}$ on the adjacency spectral embedding ($\ase$) of the mushroom body network (for visualization purposes). Each point represents a neuron in the network which has a manually identified pair in the opposite hemisphere, and colors represent one of Kenyon cells, input neurons, output neurons, and projection neurons. 
     Lines show the neuron pair that was predicted by graph matching. 
     \textbf{a.} All of the correctly matched neuron pairs. 78.8\% of neuron pairs (78/99) were correctly matched. 
     \textbf{b.} All of the incorrectly matched neuron pairs. Note that all of the incorrectly matched neurons are matched to neurons of the same cell type.}
@@ -22,18 +24,6 @@ Given a new connectome, where the correspondence between neurons is not known, t
 
 \subsection{Testing for Significant Edges} \label{sec:exp1}
 We consider two populations of networks generated from an $\er$ model and a 2-block $\mathsf{Kidney-Egg}~\sbm$ model. All networks have $n=20$ vertices and $\pi = \bracks*{0.25, 0.75}$. The block probability matrices for each population is given by $\B^{(1)} = [p, p; p, p]$ and $\B^{(2)} = [p+\delta, p; p, p]$ where $p=0.5$. 
-% \begin{align*}
-% \B^{(1)} = 
-%     \begin{bmatrix}
-%     p & p \\ p & p
-%     \end{bmatrix},~
-% \B^{(2)} = 
-%     \begin{bmatrix}
-%     p+\delta & p \\ p & p
-%     \end{bmatrix}
-% \end{align*}
-% TODONE should B_11 be bold?
-% TODO@jv - yes keeping the bold face even for element of matrix
 The difference between the two population is in the first block, $\B_{11}$, and $\delta$ is the magnitude of the difference which ranges from $0$ to $(1-p)$. In other words, $\delta$ is the effect size. Total of $m$ networks are sampled ($\frac{m}{2}$ networks per population). 
 For each edge, the t-test test statistics is computed between the two populations, which are then ranked from largest to smallest in magnitude. Ranking of the test statistics and a cutoff is utilized rather than p-value corrections (e.g. Bonferroni) to control for false positive rate. In this case, the ten edges with largest magnitudes are considered since we expect ten edges to be different. 
 Non-parametric tests are not considered since many of them are based on ranking the underlying data, which is not sensible for binary data. 
@@ -46,8 +36,9 @@ Connectivity in human brains was analyzed using the structural connectomes (see 
 \begin{figure}
     \centering
     \includegraphics[width=.75\textwidth]{figures/dnd/exp1_final}
-    \caption{
-    \textbf{Performance of finding significant edges in two different populations of networks.}
+    \caption
+    [Performance of finding significant edges in two different populations of networks.]
+    {\textbf{Performance of finding significant edges in two different populations of networks.}
     \textbf{a.} Recall for varying sample size and effect size when comparing two populations of binary networks using t-test.
     The color bar represents recall@10 averaged over 100 trials. 
     When effect size is small, significant edges cannot be detected even at large sample size. When effect size is large, significant edges can be detected at small sample sizes ($m=1000$). 
@@ -57,43 +48,18 @@ Connectivity in human brains was analyzed using the structural connectomes (see 
 
 Appendix \ref{sec:exp3} investigates the edge-wise testing in weighted connectomes. We leverage the t-test, Mann-Whitney, and Kolmogorov-Smirnov (KS) test, which is a non-parametric test of whether there exists a difference in empirical cumulative distributions between edge weights. We find that KS test is the only test that is appropriate for weighted edges since KS test can detect changes in not only the means, but also changes in variance. In weighted HCP connectomes, we find that 256 edges have trustworthiness $\geq 0.9$, and that very small fraction of edges can be trusted to be significant.
 
-
-
-% \begin{summary}[SUMMARY POINTS]
-% Depending on the sample size and effect size per edge, one can ascertain the trustworthiness of differences across two populations.
-% \end{summary}
-
-% TODO i'd make the adjmat 2x in size, and stack B and C.
-% TODO the figure seems to only be about homophylic? why didn't we also do homotopic? can we?
-% \begin{figure}
-%     \centering
-%     \includegraphics[width=\linewidth]{figures/dnd/hcp_siem_uwt.pdf}
-%     \caption{\textbf{Goodness of fit of homophilic and homotopic $\siem$ for HCP connectomes}. \textbf{A)} The average unweighted HCP diffusion connectome across $N$=$1059$ connectomes, where connectomes are binarized according to whether the weight is greater than zero or equal to zero. Vertices are arranged according to hemisphere. \textbf{(B)} A density estimate of the average community probabilities across all $N$=$1059$ connectomes. Hashes on the x-axis indicate the observed average probability in the respective block, for each connectome within the dataset (a total of $N=1059$ hashes for each block).  \textbf{(C)} A density estimate of the difference in average within-hemisphere connectivity and average between-hemisphere connectivity for all $N$=$1059$ connectomes. In all connectomes, within-hemisphere connectivity exceeds between-hemisphere connectivity (Fisher's exact test, $N$=$1059$, maximum $p$-value$<10^{-20}$) after Bonferroni correction.}
-%     \label{fig:hcp_siem_uwt}
-% \end{figure}
-
-% TODO i think i'd intergrate these things into single graph section.  figs 14 & 15 are just studying many connectomes, it is not leveraging multi-graph models in any sense, so it belongs in the single graph section.  also will make things easier for ready, as we can have 1 figure for homotopy/homophyly, instead of the 3 we currently have, distributed throughout (keeping all the panels, just moving content around).
-%TODO i would say graph matching doesn't leverage multi-grpah models either and its in here since it makes more sense to be here.
-
-% \begin{figure}
-%     \centering
-%     \includegraphics[width=.9\linewidth]{figures/dnd/hcp_block_est_uwt.pdf}
-%     \caption{\textbf{Optimal block structure for HCP diffusion connectomes}. We investigate the optimal block structure for the $N$=$1059$ HCP Diffusion Connectomes, where the connectomes are binarized as in Figure \ref{fig:hcp_siem_uwt}. For each connectome, we compute the average block probability associated with each of $3$ blocks: edges in the left hemisphere (Left), edges in the right hemisphere (Right), and edges between hemispheres (Between). Model selection using the $\chi^2$ test identifies the Planted Partition block structure as optimal on all $N$=$1059$ connectomes.}
-%     \label{fig:hcp_sbm_est_uwt}
-% \end{figure}
-
 \subsection{Testing for Significant Vertices}
 
 \begin{figure} 
     \centering
     \includegraphics[width=.8\textwidth]{figures/dnd/exp7_new}
-    \caption{
-    \textbf{Performance for finding significant vertices using various representations of vertices.} We compare a population of graphs from a planted partition stochastic block model ($\sbm$) and another from a symmetric heterogeneous $\sbm$ in two different settings. The number of vertices for each graph is kept constant ($n=70$), but the number of significantly different vertices is varied (x-axis). \textit{(Top row)} In this setting, all three representations are not valid as the false positive rate increases with the number of significant vertices. \textit{(Bottom row)} In this setting, row-wise and joint random dot product graphs ($\jrdpg$) representations are valid while common subspace independent-edge model ($\cosie$) representation is not. 
+    \caption
+    [Performance for finding significant vertices using various representations of vertices.]
+    {\textbf{Performance for finding significant vertices using various representations of vertices.} We compare a population of graphs from a planted partition stochastic block model ($\sbm$) and another from a symmetric heterogeneous $\sbm$ in two different settings. The number of vertices for each graph is kept constant ($n=70$), but the number of significantly different vertices is varied (x-axis). \textit{(Top row)} In this setting, all three representations are not valid as the false positive rate increases with the number of significant vertices. \textit{(Bottom row)} In this setting, row-wise and joint random dot product graphs ($\jrdpg$) representations are valid while common subspace independent-edge model ($\cosie$) representation is not. 
     In both settings, the sorting of the p-values can be trusted as recall@$K$ increases as number of significant vertices increase.
     }
     \label{fig:exp7}
 \end{figure} 
-
 
 In this section, we test for significant vertices using different representations of vertices. 
 Simplest representation is a set of edges, where the corresponding row (or column) of a vertex in the adjacency matrices are collected and tested for difference. 
@@ -102,8 +68,3 @@ Another is the low-dimensional latent-space representation using the $\jrdpg$ an
 We consider a population of planted partition $\sbm$ and a symmetric heterogeneous $\sbm$ in two different settings. In both settings, the planted partition $\sbm$ has $\B^{(1)} = [0.125, 0.0625; 0.0625, 0.125]$ block probability matrix. In setting 1, the symmetric heterogeneous $\sbm$ has  $\B^{(2)} = [0.125, 0.088; 0.088, 0.25]$ block probability matrix, and in setting 2, $\B^{(2)} = [0.125,  0.0625; 0.0625, 0.25]$. The vertices that belong to the second block, which has the different within-block probability, are considered significant vertices, and we vary the number of vertices that belong to the second block. Total of $m=100$ networks are sampled per population, and the p-values are computed using Hotelling's on each of the three vertex representations for each vertex. Vertices with p-values less than $\alpha=0.05$ after Bonferroni correction are considered significant. The performance is measured via true positive rate (TPR), false positive rate (FPR), and recall@$K$, where $K$ is the number of significant vertices. 
 
 Figure \ref{fig:exp7} shows that the $p$-values cannot necessarily be trusted. That is, in some settings, the significant vertices cannot be trusted due to uncontrolled FPR. However, the sorting of $p$-values can be trusted in both settings. Thus, in situations when the underlying model is not known (i.e. in real data), one should trust the sorting of the $p$-values (or test statistic), but not the magnitudes. 
-
-
-% \begin{summary}[SUMMARY POINTS]
-% Using statistical models, the differences between vertices can be tested. In this test setting, $\jrdpg$ model should be used instead of $\cosie$ model since testing using representations in $\jrdpg$ is both valid and consistent. 
-% \end{summary}
