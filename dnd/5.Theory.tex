@@ -1,0 +1,115 @@
+% 7. theory
+%     1. single graph theory
+%         a. "you say i say"
+%         b. central limit theorem for ase/lse
+%     2. multi graph theory 
+%         a. mase/omni
+%         c. nonpar + semipar theory
+%         d. sgm correlated-SBM/ER theory
+
+\section{Theory for Statistical Models}
+In this section, we provide general outlines of the theorems and proofs for statistical models in Section \ref{sec:models} and algorithms in Section \ref{sec:algorithms}.
+
+\subsection{Theory for Single Graph Models}\label{sec:theory_single}
+
+Graph features, such as the ones described in Section~\ref{sec:bag-of-features}, are popularly used to test hypothesis about a graph. However,  the distribution of such features is usually unknown, and even in cases where the asymptotic distribution is available, one needs to proceed with caution as some of the asymptotic results might be misleading \cite{priebe2010you}.  \cite{Rukhin2010} studies the behavior of two simple graph features, namely, the number of edges and the maximum  degree, for testing a simple hypothesis question about the distribution of a graph. While the statistic based on the number of edges achieves a higher power in the limit as the number of vertices grows, a comparative power analysis shows that even for large graphs with $n\leq 10^{24}$, the statistic based on the maximum degree dominates under certain cases.
+
+A body of existing results in statistical inference for spectral embeddings is reviewed more deeply in \cite{athreya2017statistical}. We summarize next some of the main results related to the exposition in this paper. 
+In this section, we assume that a sequence of random adjacency  matrices $\{\A_n, n\geq 1\}$ generated from a sequence of latent positions $\{\X_n, n\geq 1\}$, where  $\A_n\sim \rdpg(\X_n)$, $n\geq 1$ is the adjacency matrix of a graph with $n$ vertices, and $\X_n\in\RR^{n\times d}$ are $d$-dimensional latent positions. We write $(\X_n)_i$ to represent the $i$-th row of $\X_n$, and we assume that the rows of $\X_n$, which correspond to the latent positions, are an i.i.d. sample $(\X_1), \ldots, (\X_n)_n\overset{\text{i.i.d.}}{\sim} F$, where $F$ is a distribution with support $\mathcal{X}\subset\RR^d$. We also  assume that the second moment matrix $\mathbf{\Delta} = \mathbb{E}[(\X_n)_1(\X_n)_1^\top]\in\Real^{d\times d}$, has non-zero eigenvalues.   We use $\widehat{\X}_n=\ase(\A_n)\in\Real^{n\times d}$ to denote the $d$-dimensional adjacency spectral embedding of $\A_n$, and $\widetilde{\X}_n = \lse(\A_n)$  to denote its $d$-dimensional Laplacian spectral embedding.
+
+
+The adjacency spectral embedding ($\ase$) method described in Section~\ref{sec:ase} is a consistent and asymptotically normal estimator for the latent positions of a random dot product graph. In \cite{sussman2012consistent}, it is shown that clustering rows of the $\ase$ of $\A_n$ can consistently recover the communities of an $\sbm$. Consistency of the latent positions for an $\rdpg$ is studied in  \cite{Sussman2014-zq,Lyzinski2014-pe,Lyzinski2017-cq}. In particular, Theorem 5 of  \cite{Lyzinski2017-cq} shows that with probability tending to one, there exists some orthogonal rotation $\W_n\in\Real^{d\times d}$ such that 
+\begin{equation*}
+    \max_{i\in[n]}\|(\widehat{\X}_n)_i - \W_n(\X_n)_i\| \leq \frac{Cd^{1/2}\log^2 n}{\sqrt{n}}, \label{eq:thm-ASE-const}
+\end{equation*}
+where $C>0$ is a constant, and hence, the rows of of $\hat{\X}_n$ converge to the rows of $\X_n$, up to some orthogonal rotation, as the number of vertices $n$ grows. 
+
+
+Distributional results on the rows of the adjacency spectral embedding show that the error in estimating the true latent positions is asymptotically normally distributed. In particular \cite{Athreya2016} showed  a central limit theorem for the rows of the $\ase$ of $\A_n$, in which the latent positions are shown to converge to a mixture of standard multivariate normal distributions, that is, for any $\mathbf{z}\in\RR^{d}$,
+\begin{equation}
+   \lim_{n\rightarrow\infty} \mathbb{P}\left(\sqrt{n}\left(\widehat{\X}_n\W_n - \X\right)_i\leq \mathbf{z} \right) = \int_{\mathcal{X}}\Phi(\mathbf{z}, \mathbf{\Sigma}(\mathbf{x}))\  dF(\mathbf{x}),\label{eq:thm-ASE-CLT}
+\end{equation}
+where $\Phi(\mathbf{z}, \mathbf{\Sigma}(\mathbf{x}))$ is the cumulative distribution function of a multivariate normal distribution with mean zero and a covariance matrix $\mathbf{\Sigma}(\mathbf{x})\in\Real^{d\times d}$ that is a function of $\mathbf{x}\in\mathcal{X}$ (see \cite{Athreya2016}, Theorem 1, for an expression of this covariance matrix). 
+
+Similar results to the ones presented above are also available for the Laplacian spectral embedding ($\lse$). In particular, Theorem 3.1 of \cite{tang2018limit} provides an an asymptotic result on the estimation error of the rows of $\widetilde{\X}_n$  with respect to its population version, and Theorem 3.2 shows an analogous result to the one presented in Equation~\eqref{eq:thm-ASE-CLT} to establish the asymptotic normality of the rows of this estimator, that is,
+\begin{equation*}
+   \lim_{n\rightarrow\infty} \mathbb{P}\left\{\sqrt{n}\left(\W_n(\widetilde{\X}_n)_i - \frac{(\X_n)_i}{\sqrt{\sum_{j}(\X_n)_i^\top (\X_n)_j }} \right)\leq \mathbf{z}\right\}  = \int_{\mathcal{X}}\Phi(\mathbf{z}, \widetilde{\mathbf{\Sigma}}(\mathbf{x}))\  dF(\mathbf{x}),\label{eq:thm-LSE-CLT}
+\end{equation*}
+for some covariance matrix $\widetilde{\mathbf{\Sigma}}(\mathbf{x})$ which its exact form is presented in \cite{tang2018limit}.
+
+The consistency and asymptotic normality of  $\ase$ and $\lse$ considered in this section  have been recently extended to the $\grdpg$ model  (see Theorems 5-8 in  \cite{rubin2017statistical}). 
+
+
+
+\subsection{Theory for Multiple Graph Models}
+
+\subsubsection{Spectral Embeddings}\label{sec:theory_multi}
+
+The results discussed before have been used to develop valid statistical tests for   two-graph hypothesis testing questions. The work of \cite{tang2017semiparametric} studies a semiparametric graph hypothesis testing for the equivalence between the latent positions of the vertices of a pair of graphs. Formally, for each fixed $n$ let $\X_n, \Y_n\in\Real^{n\times d}$ be a sequence of latent positions matrices, and define
+$\A_n\sim\rdpg(\X_n)$, $\B_n\sim\rdpg(Y_n)$ as independent random adjacency matrices. The problem of testing the equality of the distributions of $\A_n$ and $\B_n$  is defined as
+\begin{equation*}
+    \mathcal{H}^n_0:\X_n =_{\W} \Y_n\quad\quad\quad \text{ vs.}\quad\quad\quad \mathcal{H}^n_a:\X_n \neq_{\W} \Y_n,
+\end{equation*}
+where $\X_n =_{\W}\Y_n$ denotes that $\X_n$ and $\Y_n$ are equivalent up to an orthogonal transformation $\W\in\mathcal{O}_d$, and $\mathcal{O}_d$ is the set of $d\times d$ orthogonal matrices. To define the test statistic, denote  $\widehat{\X}_n = \ase(\A_n)$, $\widehat{\Y}_n=\ase(\B_n)$, and for a matrix $\A\in\Real^{n\times n}$ with singular values $\sigma_1(\A) \geq \ldots\geq \sigma_n(\A)\geq 0$ and largest observed degree $\delta(\A) = \max_{i\in[n]}\sum_{j=1}^n\A_{ij}$, define 
+$$\gamma(\A):=\frac{\sigma_d(\A) - \sigma_{d+1}(\A)}{\delta(\A)}.$$ 
+Define $T_n$ as the test statistic
+\begin{equation*}
+    T_n : = \frac{\min_{\W\in\mathcal{O}_d} \|\widehat{\X}_n\W - \widehat{\Y}_n\|_F}{\sqrt{d\gamma^{-1}(\A_n)} + \sqrt{d\gamma^{-1}(\B_n)}}.
+\end{equation*}
+It is shown in Theorem 3.1 of \cite{tang2017semiparametric} that  $T_n$ is a consistent test for the  hypothesis testing problem described above, in the sense that for any significance level $\alpha$ and $C>1$, then  $\mathbb{P}(T_n> C)\leq \alpha$ for $n$ sufficiently large under $\mathcal{H}^n_0$ (type I error control), and if $\lim_{n\rightarrow\infty}\min_{\W\in\mathcal{O}_d} \|\widehat{\X}_n\W - \widehat{\Y}_n\|_F=\infty$, then $\mathbb{P}(T_n> C)\rightarrow 1$ under $\mathcal{H}^n_a$ (i.e., the type II error vanishes). For specific assumptions and some extensions to other hypothesis testing problems, the reader is referred to \cite{tang2017semiparametric} and \cite{athreya2017statistical}.
+
+When the vertices of the graphs are not necessarily aligned (including cases in which the graphs do not have the same number of vertices), testing equality of latent positions is inappropriate. The work of \cite{tang2017nonparametric} proposes a nonparametric test to determine whether the distribution of the latent positions of the graphs is the same. For a pair of matrices $\X_n\in\Real^{n\times d}$ and $\Y_m\in\real^{m\times d}$ with their rows distributed as $(\X_n)_i\overset{\text{i.i.d.}}{\sim} F$ and $(\Y_m)_i\overset{\text{i.i.d.}}{\sim} G$ and a pair of independent adjacency matrices $\A_n\sim\rdpg(\X_n)$, $\B_n\sim\rdpg(\Y_n)$ , the nonparametric graph hypothesis testing problem is given by
+\begin{equation*}
+    \mathcal{H}^n_0:F \upVdash G \quad\quad\quad \text{ vs.}\quad\quad\quad \mathcal{H}^n_a: F \nupVdash G,
+\end{equation*}
+where $F\upVdash G$ indicates equality of the distributions up to an orthogonal transformation. To test such hypothesis, \cite{tang2017nonparametric} proposes to use the following test statistic
+\begin{align*}
+    U_{n,m}(\X, \Y)=& \frac{1}{n(n-1)}\sum_{j\neq i}\kappa(X_i, X_j)-\frac{2}{mn}\sum_{i=1}^n\sum_{k=1}^m\kappa(X_i, Y_k)\\
+    & + \frac{1}{m(m-1)}\sum_{l\neq k}\kappa(Y_k, Y_l),
+\end{align*}
+where $\kappa:\mathcal{X}\times \mathcal{X}\rightarrow\Real$ is a positive definite kernel. In \cite{tang2017nonparametric}, Theorem 1, it is shown that $U_{n,m}(\X, \Y)$ is a consistent and unbiased estimate of the maximum mean discrepancy \cite{gretton2012kernel} between the distributions $F$ and $G$. Furthermore, under the null hypothesis, the quantity $(m+n)U_{n,m}(\X, \Y)$ converges in distribution to an infinite weighted sum of independent chi-squared random variables as $n,m\rightarrow \infty$, provided that $\frac{n}{n+m}\rightarrow \rho \in (0, 1)$.  Moreover, when the latent positions are used in place of the true latent positions, then Theorem 4 of \cite{tang2017nonparametric} shows that the difference between $U_{n,m}(\widehat{\X}, \widehat{\Y})$  and $U_{n,m}(\X, Y)$ converges to zero sufficiently fast to yield a consistent test procedure.
+
+% Under the null hypothesis that $F = G$ (up to some orthogonal transformations), 
+% \begin{equation*}
+%     (m+n)(U_{n,m}(\widehat{\X}, \widehat{\Y}) - U_{n,m}({\X}, {\Y}\W_{n,m})) \overset{a.s.}{\rightarrow} 0.
+% \end{equation*}
+% Under the alternative hypothesis, 
+% \begin{equation*}
+%     \frac{(m+n)}{\log^2(m+n)}(U_{n,m}(\widehat{\X}, \widehat{\Y}) - U_{n,m}({\X}, {\Y}\W_{n,m})) \overset{a.s.}{\rightarrow} 0
+% \end{equation*}
+
+% Suppose that $n,m\rightarrow\infty$ and $\frac{m}{m+n}\rightarrow\rho\in(0,1)$.
+
+%Theorem 43 of \cite{athreya2017statistical} (consistency of nonpar)
+
+The work of \cite{levin2017central} studies the omnibus embedding described in Section~\ref{sec:omni} under the joint random dot product graph ($\jrdpg$) model, where $(\A^{(1)}, \ldots, \A^{(m)})\sim\jrdpg(\X_n)$, and the rows of $\X_n\in\Real^{n\times d}$ are an i.i.d. sample from some distribution $F$. Let $\widehat{\mathbf{O}}\in\Real^{mn\times mn}$ be the omnibus embedding of $\A^{(1)}, \ldots, \A^{(m)}$ and $\widehat{\Z} = \ase(\mathbf{O})\in\Real^{mn\times d}$.
+Under this setting, it is shown in Lemma 1 of \cite{levin2017central} that the rows of $\widehat{\Z}_n$ are a consistent estimator of the latent positions of each individual graph  as $n\rightarrow\infty$, and that
+\begin{equation}
+\max_{i\in[n],j\in[m]}\|(\widehat{\Z}_n)_{(j-1)n + i} - \W_n(\X_n)_{i}\| \leq \frac{C\sqrt{m}\log(mn)}{\sqrt{n}}. \label{eq:OMNI-consistency}    
+\end{equation}
+Furthermore, a central limit theorem for the rows of the omnibus embedding  asserts that
+\begin{equation}
+   \lim_{n\rightarrow\infty} \mathbb{P}\left\{\sqrt{n}\left(\W_n(\widehat{\Z}_n)_{(j-1)n + i} - (\X_n)_i\right)\leq \mathbf{z}\right\}  = \int_{\mathcal{X}}\Phi(\mathbf{z}, \widehat{\mathbf{\Sigma}}(\mathbf{x}))\  dF(\mathbf{x}),\label{eq:thm-OMNI-CLT}
+\end{equation}
+for some covariance matrix $\widehat{\Sigma}(\mathbf{x})$ (see Theorem 1 of \cite{levin2017central} for an exact expression). In recent work, \cite{draves2020bias} extended the study of the omnibus embedding and provided results analogous to the ones in Equations~\eqref{eq:OMNI-consistency} and \eqref{eq:thm-OMNI-CLT} under a more general model that allows for differences in the latent positions of each graph.
+
+
+The $\cosie$ model described in Section~\ref{sec:cosie} describes multiple networks with expected probability matrices that share the same common invariant subspace. It is shown in \cite{arroyo2019inference} that the $\mase$ algorithm (see Section~\ref{sec:mase}) is a consistent estimator for this common invariant subspace, and produces asymptotically normally distributed estimates for the individual symmetric matrices. Specifically, let $\V_n\in\Real^{n\times d}$ be
+a sequence of orthonormal matrices and $\R^{(1)}_n, \ldots, \R^{(m)}_n\in\Real^{d\times d}$ a sequence of score matrices such that $\mathbf{P}^{(l)}_n=\V_n\R^{(l)}_n\V_n^\top\in[0,1]^{n\times n} $, $(\A_n^{(1)}, \ldots, \A_n^{(m)})\sim \cosie(\V_n;, \R^{(1)}_n, \ldots, \R^{(m)}_n)$, and $\widehat{\V}, \widehat{\R}^{(1)}_n, \ldots, \widehat{\R}^{(1)}_n$ be the estimators obtained by $\mase$. Under appropriate regularity conditions (see Theorem 3 of \cite{arroyo2019inference}), the estimate for $\V$ is consistent as $n,m\rightarrow\infty$, and there exists some constant $C>0$ such that
+        \begin{equation*}
+			\mathbb{E}\left[\min_{\W\in\mathcal{O}_d}\|\widehat{\V}-\V\W\|_F\right] \leq C\left(\sqrt{\frac{1}{mn}} + {\frac{1}{n}}\right). \label{eq:theorem-bound}
+		\end{equation*}
+    In addition, the entries of $\widehat{\mathbf{R}}^{(l)}_n$, $l\in[m]$ are asymptotically normally distributed. Namely, there exists a sequence of orthogonal matrices $\W$ such that
+		$$\frac{1}{\sigma_{l,j,k}}\left(\widehat{\R}^{(l)}_n - \W^\top\R^{(l)}_n\W + \Hmat_m^{(l)}\right)_{jk} \overset{d}{\rightarrow} \mathcal{N}(0, 1), $$
+		as $n\rightarrow\infty$, where
+		$\mathbb{E}[\|\Hmat_m^{(l)}\|]=O\left(\frac{d}{\sqrt{m}}\right)$ and $\sigma^2_{l,j,k} = O(1)$. 
+		For a  precise statement about the joint distribution of the entries of $\widehat{\mathbf{R}}_n^{(i)}$, see Theorem 7 in \cite{arroyo2019inference}.
+
+
+\subsubsection{Graph Matching for Correlated Networks } Given a pair of graphs $\A_n$ and $\B_n$ with $n$ vertices each, the graph matching problem tries to find a correspondence between their vertices. A body of literature has studied the feasibility of finding the correct matching under different random graph models, including correlated  Erd\H{o}s-R\'enyi  \cite{Lyzinski2013-fq,cullina2016improved} and Bernoulli graphs
+\cite{lyzinski2015graph}. In this section we review some of the results for the correlated Erd\H{o}s-R\'enyi model described in Section~\ref{sec:correlated-graphs}.
+
+Formally, given parameters $\rho_n\in[0,1]$ and $q_n \in(0, 1-\xi_1)$ for some small $\xi_1>0$, the $n\times n$ adjacency matrices $\A_n$ and $\B_n$ are distributed as correlated Erd\H{o}s-R\'enyi if their marginal distributions are $\A_n\sim\er_n(q_n)$, $\B_n\sim\er_n(q_n)$, but the edge pairs satisfy $\text{Corr}((\A_n)_{ij},(\mathbf{Q}_n^\top\B_n\mathbf{Q}_n)_{ij})=\rho_n$, where $\mathbf{Q}_n\in\mathcal{P}_n$ is a permutation matrix that gives the correct alignment between the vertices (here $\mathcal{P}_n$ denotes the set of $n\times n$ permutation matrices). The work of \cite{Lyzinski2013-fq}  studies the feasibility of finding $\mathbf{Q}_n$ by solving the optimization problem defined in Equation~\eqref{eq:GMP}. In particular, it is shown that there exists positive constants $c_1, c_2$ such that if $\rho_n\geq c_1\sqrt{\frac{\log n}{n}}$ and $q_n\geq c_2 \frac{\log n }{n}$, then $\mathbf{Q}_n$ can be correctly recovered  with probability 1 for $n$ sufficiently large (Theorem 1 of \cite{Lyzinski2013-fq}). 
+
+While the solution of the quadratic assignment problem \eqref{eq:GMP} can correctly recover the vertex alignment in theory, it is computationally challenging to solve the optimization problem. In the presence of $s_n$ seed vertices with known correspondence between the graphs, \cite{Lyzinski2013-fq} introduced an efficient polynomial algorithm to recover the alignment of the remaining $n-s_n$ vertices.
+Theorem 2 of \cite{Lyzinski2013-fq} shows that this method can correctly recover $\mathbf{Q}_n$ in the setting where $\xi_2 < p_n<1-\xi_2<1$ and $\xi_2 < \rho_n < \xi_2$ for some $\xi_2>0$ in the presence of a logarithmic number of seeds (i.e. $s_n\geq c_3 \log n$ for some $c_3>0$).

@@ -26,8 +26,8 @@ Recently, methods have been proposed for determining whether two graphs are stat
 Most of these methodologies are aimed for pairs of graphs with a known correspondence between their vertices, and thus the problem consist in finding significant differences on the corresponding edges or vertices. 
 Here, we focus on the more general setting where this vertex correspondence is unknown or might not exist, for example when the graphs do not have the same number of vertices. 
 In this setting, we are interested in identifying significant differences on some underlying structure of the vertices.
-In particular, \citet{tang2014nonparametric} proposed a nonparametric approach that operates on pairs of graphs in which there is no known correspondence between their corresponding vertex sets using the distance between probability distributions on a vertex latent space. This method uses the maximum mean discrepancy (MMD) test to detect differences between  distributions of the estimated latent positions of the vertices.
-In \citet{agterberg2020nonparametric}, the authors extend this procedure to resolve the inherent non-identifiabilities in the vertex latent space via an optimal transport solution that yields consistent nonparametric hypothesis test.
+In particular, \cite{tang2014nonparametric} proposed a nonparametric approach that operates on pairs of graphs in which there is no known correspondence between their corresponding vertex sets using the distance between probability distributions on a vertex latent space. This method uses the maximum mean discrepancy (MMD) test to detect differences between  distributions of the estimated latent positions of the vertices.
+In \cite{agterberg2020nonparametric}, the authors extend this procedure to resolve the inherent non-identifiabilities in the vertex latent space via an optimal transport solution that yields consistent nonparametric hypothesis test.
 % study a similar test statistic when there is nonidentifiabilities between the estimated vertex latent space, 
 % random graphs with both negative and repeated eigenvalues and sparsity, 
 % and they show that properly aligning the respective latent space yields consistent nonparametric hypothesis testing. 
@@ -88,7 +88,7 @@ However, if $XX^\top$ has repeated eigenvalues, then the singular (eigen) vector
 Since one only observes two different adjacency matrices, then the leading singular vectors may not be aligned \textit{a priori}.
 If one assumes that $XX^\top$ has distinct eigenvalues, this sign ambiguity is often adjusted for by flipping the signs of each dimensions such that the medians have the same sign; that is for each embedding dimension, $\text{sign}(\text{median}(X_i)) = \text{sign}(\text{median}(Y_i))$ for all $i\in d$ \cite{tang2014nonparametric, correcting-nonpar}. 
 This heuristic can perform poorly when the medians of the samples are too close to zero.
-In addition, this approach falls short in the case of repeated eigenvalues of the matrix $XX^{\top}$ since the subspace associated with such values are only unique up to a more general rotation, and hence the leading singular vectors of each adjacency matrix may not be close, even if $n$ is large, since the leading singular values of the adjacency matrices will be perturbed versions of the singular values of $XX^\top$. For more details and discussion on this form of nonidentifiability, see \citet{on-two-sources}. 
+In addition, this approach falls short in the case of repeated eigenvalues of the matrix $XX^{\top}$ since the subspace associated with such values are only unique up to a more general rotation, and hence the leading singular vectors of each adjacency matrix may not be close, even if $n$ is large, since the leading singular values of the adjacency matrices will be perturbed versions of the singular values of $XX^\top$. For more details and discussion on this form of nonidentifiability, see \cite{on-two-sources}. 
 
 If the two graphs had paired vertices, then the orthogonal misalignment between the two samples could be resolved by using a solution to
 a well-known orthogonal Procrustes problem \cite{schonemann1966generalized}.
@@ -99,7 +99,7 @@ In unpaired graphs, there is no \textit{a priori} assignment between vertices, s
 \end{align}
 where the entries of the cost matrix $C_W$ are given by $\left(C_W\right)_{ij} =  ||\hat X_i - W\hat Y_j||^2$,  $\hat X \in \mathbb{R}^{n\times d}$ and $\hat Y \in \mathbb{R}^{m\times d}$ are estimated latent positions,  $\Pi = \frac{1}{nm} \mathbf{1} \mathbf{1}^\top$ is an assignment matrix that satisfies $\Pi \mathbf{1} = \frac{1}{n} \mathbf{1}$ and $\Pi^{\top} \mathbf{1} = \frac{1}{m} \mathbf{1}$, and $W$ is constrained to be orthogonal. Given an initial guess $W_0$, the algorithm iteratively updates $\Pi_{i+1} | W_{i}$
 by via an optimal transport algorithm \cite{alvarez2019towards} and $W_{i+1} | \Pi_{i}$ using the solution to the Procrustes problem. In graph setting, the algorithm is initialized with all possible orthogonal diagonal matrices, i.e. the 
-$2^d$ different diagonal matrices with $\pm{1}$ on the diagonal \cite{agterberg2020nonparametric}. In \citet{agterberg2020nonparametric}, the authors show that the orthogonal matrix that globally minimizes the objective function \eqref{eq:2.1} yields a consistent estimate of the orthogonal matrix approximately aligning the empirical distributions of the two ASEs, including when the corresponding graphs have (asymptotically) repeated singular (eigen) values.
+$2^d$ different diagonal matrices with $\pm{1}$ on the diagonal \cite{agterberg2020nonparametric}. In \cite{agterberg2020nonparametric}, the authors show that the orthogonal matrix that globally minimizes the objective function \eqref{eq:2.1} yields a consistent estimate of the orthogonal matrix approximately aligning the empirical distributions of the two ASEs, including when the corresponding graphs have (asymptotically) repeated singular (eigen) values.
 
 \subsection{Distance Correlation}
 Due to the equivalence between two-sample and independence testing \cite{exact-equivalence-2}, distance correlations (DCorr) can be used to test the equality of the distributions $F_X$ and $F_Y$. Define $Z=(X^\top, Y^\top)^\top\in\mathbb{R}^{N\times d}$ and $E=(0_n, 1_m)^\top\in\mathbb{R}^{N}$, where $N=n+m$. DCorr tests the independence of $Z$ and $E$ using some distance functions $\delta_Z:\mathbb{R}^{d}\times\mathbb{R}^{d}\rightarrow\mathbb{R}$ and $\delta_E:\mathbb{R}\times\mathbb{R}\rightarrow\mathbb{R}$. Here, $\delta_Z$ and $\delta_E$ denote the Euclidean norm in $\mathbb{R}^{d}$ and $\mathbb{R}$, respectively.
@@ -159,7 +159,9 @@ Finally, set $x_i \overset{\text{iid}}{\sim} F_X$ and $y_i \overset{\text{iid}}{
 \begin{figure}[hbt!]
     \centering
     \includegraphics[width=\linewidth]{figures/nonpar/simulations.pdf}
-    \caption{Type I error and power vs. number of vertices ($n$) for detecting differences in the distribution of latent positions using different methods (DCorr and MGC). Dashed lines represent $\alpha=0.05$, and error bars represent $95\%$ confidence interval.
+    \caption
+    [Type I error and power vs. number of vertices ($n$) for detecting differences in the distribution of latent positions using different methods (DCorr and MGC).]
+    {Type I error and power vs. number of vertices ($n$) for detecting differences in the distribution of latent positions using different methods (DCorr and MGC). Dashed lines represent $\alpha=0.05$, and error bars represent $95\%$ confidence interval.
     \textit{(Left)} When the distributions of the latent positions are identical, both methods are valid as power is near or at $\alpha=0.05$. \textit{(Middle)} When the distributions are linearly dependent, both methods are equally powerful and consistent. \textit{(Right)} When the distributions are nonlinearly dependent, both methods are consistent, but MGC is more powerful than DCorr.}
     \label{fig:simulations}
     % TODO figure captions always must say n & p, and refer to text where simulations are described. same comments for fig 2. 
@@ -169,7 +171,7 @@ Finally, set $x_i \overset{\text{iid}}{\sim} F_X$ and $y_i \overset{\text{iid}}{
 % In this section, we discuss applications to synthetic and real data using the \textit{Drosophila melanogaster} connectomes. 
 
 \paragraph{\textit{Drosophila melanogaster} brain}
-The connectomes, or brain graphs, of the \textit{Drosophila melanogaster} mushroom body was obtained in \citet{eichler2017complete}. The left brain graph ($A^L$) has $n=163$ neurons represented with the vertices, and the right brain graph ($A^R$) has $m=158$ neurons. Both graphs are binary with $A_{i j} \in \{0, 1\}$, symmetric with $A= A^\top$, and hollow with $\text{diag}(A) = \vec 0$. The edges of the data represent whether a synaptic connection exist between a pair of neurons or not.
+The connectomes, or brain graphs, of the \textit{Drosophila melanogaster} mushroom body was obtained in \cite{eichler2017complete}. The left brain graph ($A^L$) has $n=163$ neurons represented with the vertices, and the right brain graph ($A^R$) has $m=158$ neurons. Both graphs are binary with $A_{i j} \in \{0, 1\}$, symmetric with $A= A^\top$, and hollow with $\text{diag}(A) = \vec 0$. The edges of the data represent whether a synaptic connection exist between a pair of neurons or not.
 
 \paragraph{Synthetic Data Analysis}
 The performances of the two SVD alignment methods (median flipping and Optimal Transport Procrustes) and two hypothesis tests (DCorr and MGC) are analyzed by simulating synthetic data from the \textit{Drosophila} connectomes. Given an estimated latent position matrix $\hat X\in \mathbb{R}^{n\times d}$ obtained from one of the hemispheres (either $A^L$ or $A^R$), a pair of new latent position matrices are sampled, either with or without perturbation, to analyze the power and validity of various methods as a function of the number of vertices and the effect size. The latent position matrices, $\hat X$, are multivariate with $d=3$ for both hemispheres, which is given by the likelihood profile of eigenvalues \cite{zhu2006automatic}.
@@ -177,7 +179,7 @@ The performances of the two SVD alignment methods (median flipping and Optimal T
 The first step in data generation is to sample with replacement a set of $m$ vertices from the original graph. Let $\mathcal{P}\subseteq [n]$ be the set of indices for the randomly selected vertices, where $|\mathcal{P}|=m$. For each $i\in\mathcal{P}$, a pair of $d$-dimensional random latent positions $Y_i$ and $Z_i$ are independently generated
 via 
 \[Y_i \sim \mathcal{MVN}(\hat X_i, \hat\Sigma(\hat X_i)), \quad\quad \quad Z_i \sim  \mathcal{MVN}(\hat X_i + \epsilon_i, \hat\Sigma(\hat X_i)),\]
-where $\mathcal{MVN}(x, \Sigma)$  is a $d$-variate normal distribution with mean $x$ and covariance $\Sigma$, and $\hat\Sigma(\hat X_i)$ is the covariance matrix of the difference between $\hat{X}_i$ and  $X_i$ given by the central limit theorem in \citet{Athreya2015}, which is introduced to account for the fact that the true latent position $X_i$ is not observed. A random subset $\mathcal{O} \subseteq \mathcal{P}$ of the vertices are perturbed by adding $\epsilon_i$,  defined as 
+where $\mathcal{MVN}(x, \Sigma)$  is a $d$-variate normal distribution with mean $x$ and covariance $\Sigma$, and $\hat\Sigma(\hat X_i)$ is the covariance matrix of the difference between $\hat{X}_i$ and  $X_i$ given by the central limit theorem in \cite{Athreya2015}, which is introduced to account for the fact that the true latent position $X_i$ is not observed. A random subset $\mathcal{O} \subseteq \mathcal{P}$ of the vertices are perturbed by adding $\epsilon_i$,  defined as 
 \begin{align*}
 \epsilon_j &\sim 
 \begin{cases}
@@ -191,8 +193,8 @@ where $\text{Unif}(\mathcal{S}^d_r)$ is the uniform distribution on the surface 
 \begin{figure}[b!]
     \centering
     \includegraphics[width=1\linewidth]{figures/nonpar/figure3.pdf}
-    \caption{
-    Type I error and power vs. number of vertices ($n$) using synthetic data generated from \textit{Drosophila} connectomes. The effect size, or the magnitude of the change in latent positions, is fixed at $r = 1$. The gray dashed line is $\alpha=0.05$.
+    \caption[Type I error and power vs. number of vertices ($n$) using synthetic data generated from \textit{Drosophila} connectomes.]
+    {Type I error and power vs. number of vertices ($n$) using synthetic data generated from \textit{Drosophila} connectomes. The effect size, or the magnitude of the change in latent positions, is fixed at $r = 1$. The gray dashed line is $\alpha=0.05$.
     Each row represents right or left hemisphere of the brain, and each column represents different proportion of vertices changed. When $\rho = 0$, the latent position distributions $F_V$ and $F_W$ are the same. Latent position alignment via median flip is invalid as shown in first column ($\rho = 0$) as type I error is above $\alpha$ and increasing with the size of the graphs; OTP resolves the invalidity of median flip. 
     Testing via MGC is more powerful than testing via DCorr as shown in columns where $\rho = 0.5$ and $\rho = 1$.
     Curves for median flip testing are omitted in the middle and right panels since using median flip results in an invalid test. 
@@ -246,7 +248,8 @@ DCorr+Median &  \textcolor{ForestGreen}{0.986} &  \textcolor{ForestGreen}{1} &  
 \begin{figure}[t!]
     \centering
     \includegraphics[width=\linewidth]{figures/nonpar/figure3.pdf}
-    \caption{Embeddings for the \textit{Drosophila} connectomes after alignment with Optimal Transport Procrustes (left) and median flip (right) with embedding dimension $\hat d =3$. The diagonals are histograms of each dimension, upper off-diagonals are pairwise scatter plots, and lower off-diagonals are the difference of the kernel density estimates of the two embeddings. 
+    \caption[Embeddings for the \textit{Drosophila} connectomes after alignment with Optimal Transport Procrustes (left) and median flip (right) with embedding dimension $\hat d =3$]
+    {Embeddings for the \textit{Drosophila} connectomes after alignment with Optimal Transport Procrustes (left) and median flip (right) with embedding dimension $\hat d =3$. The diagonals are histograms of each dimension, upper off-diagonals are pairwise scatter plots, and lower off-diagonals are the difference of the kernel density estimates of the two embeddings. 
     \textit{(Left)} OTP properly aligns all three dimensions. 
     \textit{(Right)} Median flips results in misalignment in dimension 3 of the left hemisphere embedding. 
     }
@@ -260,6 +263,6 @@ The results presented herein demonstrate the improvement of the nonparametric tw
 
 
 \section{Code}
-All code and data used in the analysis are available at \burl{https://github.com/neurodata/improving-latent-distribution-test}. 
-The analysis were performed using the \texttt{graspologic} (\burl{https://github.com/microsoft/graspologic}) and \texttt{hyppo} (\burl{https://github.com/neurodata/hyppo})  Python packages  \cite{chung2019graspy, panda2021hyppo}. 
+All code and data used in the analysis are available at \url{https://github.com/neurodata/improving-latent-distribution-test}. 
+The analysis were performed using the \texttt{graspologic} (\url{https://github.com/microsoft/graspologic}) and \texttt{hyppo} (\url{https://github.com/neurodata/hyppo})  Python packages  \cite{chung2019graspy, panda2021hyppo}. 
 The methods described herein are implemented in \texttt{graspologic}.

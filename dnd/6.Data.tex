@@ -1,0 +1,15 @@
+\section{Data Descriptions}
+The following two datasets are analyzed using the algorithms and models described Sections \ref{sec:models} and \ref{sec:algorithms}. Section \ref{sec:single_app} primarily focuses on the \textit{Drosphila} connectome, while Section \ref{sec:multi_app} primarily focuses on HCP connectomes.
+
+\subsection{\textit{Drosphila} Larval Mushroom Body Data Description}\label{sec:drosphila}
+The connectome was estimated from serial-section electron microscopy (EM) of an L1 \textit{Drosophila} larva \cite{eichler2017complete}. For the mushroom body (MB) subcircuit, the graph was defined by manually identifying synapses in the EM volume, and tracing the pre- and post-synaptic partners through the EM volume back to their cell bodies. Each node in this graph represents an individual neuron, and each edge consists of one or more synapses between those neurons. Thus, edge weights are the number of synapses between neurons. 
+
+Each node in the graph also has an associated cell type: Kenyon cell (KC), projection neuron (PN), MB input neuron (MBIN), and MB output neuron (MBON). Additionally, we can categorize neurons based on hemisphere (which side of the brain each neuron was on), and neuron pair (for most neurons, a homologous pair neuron in the other hemisphere was identified by morphological comparison).
+
+\subsection{HCP Data Description}\label{sec:hcp}
+We used publicly available diffusion MRI (dMRI) and structural MRI (sMRI) data from the S1200 (2017) release of the Human Connectome Project (HCP) Young Adult study, acquired by the Washington University in St. Louis (WUSTL) and the University of Minnesota (Minn) \cite{hcp1, hcp2}. Out of the 1206 participants released, 1059 had viable dMRI for processing. 
+
+Connectomes were estimated using the ndmg pipeline \cite{Kiar188706}. Briefly, the dMRI scans were pre-processed for eddy currents using FSL's \texttt{eddy-correct} \cite{fsl1}. FSL's ``standard" linear registration pipeline was used to register the sMRI and dMRI images to the MNI152 atlas \cite{fsl1,fsl2,fsl3,mni152}.A tensor model is fit using DiPy \cite{dipy} to obtain an estimated tensor at each voxel. A deterministic tractography algorithm is applied using DiPy's EuDX \cite{dipy,eudx} to obtain streamlines, which indicate the voxels connected by an axonal fiber tract. We used a modified version of Desikan–Killiany–Tourville (DKT) parcellation \cite{DKT}  to define the ROIs. Graphs are formed by counting the number of fibers between a pair of ROIs. 
+
+% TODONE seems like drosophila is only in 6, and HCP is only in 7? if so, you can absorb this section into the appropriate subsections. 
+% TODO@jv - not quite true since the graph matching is in multi-graphs

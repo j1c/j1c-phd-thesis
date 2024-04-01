@@ -1,0 +1,14 @@
+\section{Summary}
+
+\begin{summary}[SUMMARY POINTS]
+\begin{enumerate}
+    \item Don't rely on network statistics to characterize populations of connectomes. In general, network statistics don't characterize the data that well, and are correlated with one another. Thus, any claim that a specific statistic explains a phenotypic property of a person is based on spurious reasoning.
+    \item Do use statistical models developed for networks. Statistical models allow for testing a variety of hypotheses, such as testing for appropriate models and finding significant vertices or communities.
+    \item Do use spectral clustering methods for determining community structure. Theoretical and empirical results show that spectral clustering methods can estimate meaningful and trustworthy community structures. However, note that different methods can provide different, but complementary results. 
+    \item Do use appropriate hypothesis tests. For example, t-test is appropriate for binary connectomes, but typically invalid and/or under-powered for weighted connectomes.
+    \item Don't trust the p-values when performing multiple hypothesis tests. Multiple testing requires corrections to control the false positive rate, all of which are inappropriate for connectomics data.
+    \item Do trust the sorting of the p-values when performing multiple hypothesis tests. That is, consider the tests with smallest p-values to reject the null hypothesis as the sorting can be trusted, but not necessarily the magnitudes of p-values. 
+\end{enumerate}
+\end{summary}
+
+Connectomics is an exciting area and is full of interesting ideas, which has led to the emergence of a variety of analysis frameworks. However, the use of statistical modeling in connectomics is still relatively sparse, especially compared to other areas of science. The key conceptual hurdle in statistical modeling of connectomes is to model the entire connectome rather than just edges or features while taking into account the structures and interactions within a connectome. This article provides an overview of current analysis frameworks of connectomics data, and how statistical models can be incorporated to improve current analysis methods. %Below, we summarize the main findings.
