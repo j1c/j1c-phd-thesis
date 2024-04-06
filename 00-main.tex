@@ -399,7 +399,7 @@ with the requirements for the degree of {#2}
 
 
 %%%% PARSKIP: for paragraph (and not title) spacing, roughly speaking
-\renewcommand{\arraystretch}{\GlobalTableSpacing}   % spacing inside table
+% \renewcommand{\arraystretch}{\GlobalTableSpacing}   % spacing inside table
 \setlength{\parskip}{\ParagraphSpacing}             % paragraph skip
 \setlength{\parindent}{\ParagraphIndent}            % paragraph indentation
 \setlength{\bibitemsep}{\BibItemSpacing}            % bib item separation 
@@ -567,12 +567,13 @@ with the requirements for the degree of {#2}
 
 
 %%%% include all the main text chapters
-\include{06-chapter-1}
-\include{07-chapter-2}
-\include{08-chapter-3}
-\include{09-chapter-4}
-\include{10-chapter-5}
-\include{11-discussions}
+\include{06-chapter-1} % intro
+\include{08-chapter-3} % review
+\include{09-chapter-4} % nonpar
+\include{07-chapter-2} % heritability
+\include{11-chapter-6} %mgcx
+\include{10-chapter-5} %graspy
+\include{12-discussions}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%% END MAIN TEXT %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -586,7 +587,7 @@ with the requirements for the degree of {#2}
 \BibTextSpacing                     % one-half spacing for the bib items
 \fancyhead[L]{\nouppercase \leftmark}
 
-\include{11-references}             % include reference chapter
+\include{13-references}             % include reference chapter
 
 
 %%%% OPTIONAL: Appendix chapter (same format as the main chapters)

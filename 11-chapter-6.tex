@@ -1,0 +1,782 @@
+\chapter{Independence Testing for Temporal Data} \label{chap:mgcx}
+
+This chapter introduces an algorithm for testing whether two temporal data are independent with applications in functional connectomics. This chapter was originally published in Transactions on Machine Learning Research in April 2024 (DOI: \url{https://doi.org/10.48550/arXiv.1908.06486}) and is distributed under the terms of a Creative Commons Attribution License that permits unrestricted use and redistribution provided that the original author and source are credited.
+
+\pagebreak 
+\section*{Abstract}
+Temporal data are increasingly prevalent in modern data science. A fundamental question is whether two time series are related or not. Existing approaches often have limitations, such as relying on parametric assumptions, detecting only linear associations, and requiring multiple tests and corrections. While many non-parametric and universally consistent dependence measures have recently been proposed, directly applying them to temporal data can inflate the p-value and result in an invalid test. To address these challenges, this paper introduces the temporal dependence statistic with block permutation to test independence between temporal data. Under proper assumptions, the proposed procedure is asymptotically valid and universally consistent for testing independence between stationary time series, and capable of estimating the optimal dependence lag that maximizes the dependence. Moreover, it is compatible with a rich family of distance and kernel based dependence measures, eliminates the need for multiple testing, and exhibits excellent testing power in various simulation settings.
+\pagebreak
+
+\section{Introduction}\label{sec:intro}
+Temporal data, often referred to as time series, finds wide applications across diverse domains, such as functional magnetic resonance imaging (fMRI) in neuroscience, dynamic social networks in sociology, financial indices, etc. In a broader context, temporal data can be seen as a type of structural data characterized by inherent underlying patterns. When dealing with temporal data, a fundamental problem is to determine the presence of a relationship between two jointly observed time series. 
+
+In the context of standard independent and identically distributed (i.i.d.)~data, where observations $(X_1, Y_1), (X_2, Y_2), \ldots, (X_n, Y_n)$ are drawn independently and identically from the joint distribution $F_{XY}$, the question simplifies to whether the underlying random variables $X$ and $Y$ are independent, i.e., $F_{XY}=F_{X}F_{Y}$. Many recent dependence measures have been proposed to tackle this problem, aiming to achieve valid and universally consistent independence testing. These methods include distance correlation \cite{szekely2007,SzekelyRizzo2009, SzekelyRizzo2014}, Hilbert-Schmidt independence criterion \cite{hsic,GrettonGyorfi2010,GrettonEtAl2012}, multiscale graph correlation \cite{mgc-elife, mgc-jasa,mgc3}, and many others \cite{HellerGorfine2013,Zhu2017,Pan2020}. 
+
+However, the standard testing framework is not applicable to structured data such as time series, because the i.i.d.~assumption often does not hold. As a result, standard testing procedures like the permutation test are known to produce inflated p-values and are thus unsuitable for testing structured data \cite{Mantel2013, DiCiccio2017}. Existing research on testing independence for temporal data is limited, often relying on linear measures such as autocorrelation and cross-correlation, which may overlook potential nonlinear relationships \cite{hsicts}. A commonly made assumption is to consider the sample data as stationary, meaning that the joint distribution of $(X_t, Y_{t-l})$ depends only on the lag $l$ and not on any specific time index $t$. Approaches for addressing the instantaneous time problem, where the goal is to detect whether $X_t$ and $Y_t$ are independent, have been explored in \cite{shifthsic}. Moreover, \cite{wildhsic} investigates the problem of testing between $X_t$ and $Y_{t-l}$ for each lag $l$ separately, employing multiple testing techniques.
+
+In this paper, we propose an aggregated temporal statistic and utilize a block permutation procedure to extend the scope of independence testing beyond the i.i.d.~assumption. Given a standard dependence measure such as distance correlation, our method first calculates a set of cross dependence statistics. These statistics not only facilitate the estimation of the optimal dependence lag, but also enable the computation of the temporal dependence statistic as a weighted aggregation of all cross dependence statistics. Subsequently, we employ a block permutation procedure to derive a p-value for hypothesis testing. Under proper assumptions regarding the choice of the dependence measure, the joint distribution of the temporal data, and the parameters of the block permutation, we establish the asymptotic properties of the temporal dependence, and prove the asymptotic validity and universal consistency of our method. Notably, the proposed temporal dependence method is non-parametric and does not require multiple testing.
+
+Numerically, we show that the proposed approach yields satisfactory testing power when applied to simulated time series with small sample sizes. It is compatible with various dependence measure choices, and numerically superior and more versatile than previously proposed time series testing procedures. Additionally, we present the results of a real-data experiment that utilizes the proposed method to analyze neural connectivity based on fMRI data. 
+
+\section{Method}
+% \label{sec:methods}
+
+\subsection{Hypothesis for Testing Temporal Dependence}
+Given the joint sample data $\{(X_1,Y_1),...,(X_n,Y_n)\}$, let $\vec{X}=\{X_1, \ldots, X_n\} \in \mathbb{R}^{p \times n}$ and $\vec{Y}=\{Y_1, \ldots, Y_n\} \in \mathbb{R}^{q \times n}$ represent each individual sample data. Here, $p$ and $q$ denote the dimensions and are positive integers, and $n$ is the sample size.
+
+Suppose $(\vec{X},\vec{Y})$ is strictly stationary, meaning the distribution at any set of indices remains the same. We can represent the distributions of $X_t$ and $Y_t$ at any point $t$ as $F_{X}$ and $F_{Y}$, and represent the distribution of $(X_{t}, Y_{t-l})$ as $F_{XY_{-l}}$ for each lag $l \geq 0$.
+
+We aim to test the following independence hypothesis between $\vec{X}$ and $\vec{Y}$:
+\begin{align*}
+    H_0: F_{XY_{-l}} &= F_{X} F_{Y} \text{ for each } l \in \{0, 1, ..., L\}\\
+    H_A: F_{XY_{-l}} &\neq F_{X} F_{Y} \text{ for some } l \in \{0, 1, ..., L\},
+\end{align*}
+Here, $L$ is a non-negative integer denoting the maximum lag under consideration. Essentially, the null hypothesis states that $X_t$ is independent of present and past values of $Y_{t-l}$ for all of $l=0,\ldots,L$. In contrast, the alternative hypothesis suggests $(\vec{X}, \vec{Y}_{-l})$ are dependent for at least one $l$ in the range of $[0, L]$. 
+
+This setting is, in fact, a generalization of the standard i.i.d.~setting, where it was assumed that $(X_1,Y_1), (X_2, Y_2),\ldots, (X_n, Y_n) \stackrel{i.i.d.}{\sim} F_{XY}$, and the null hypothesis simplifies to $F_{XY} = F_{X} F_{Y}$ because there is no possible dependence other than $l=0$. Hence, our subsequent method and theory for testing two time series are also applicable when only one of them is time series or when both are standard i.i.d.~data. Moreover, they are applicable to any general structured data that can be assumed stationary.
+
+\subsection{Main Algorithm}
+The proposed method consists of four steps: computation of the cross-lag dependence statistics, estimation of the optimal dependence lag, computation of temporal dependence statistic, and block permutation to obtain the p-value for testing purposes. Details regarding the choice of the dependence measure, block permutation, and computational complexity are discussed in the following subsections.
+
+\begin{itemize}
+\item[\textbf{Input:}] Two jointly-sampled datasets represented as $\vec{X} \in \mathbb{R}^{p \times n}$ and $\vec{Y} \in \mathbb{R}^{q \times n}$, a given choice of sample dependence measure $\TDCor_{n}(\cdot,\cdot): \mathbb{R}^{p \times n} \times \mathbb{R}^{q \times n} \rightarrow \mathbb{R}$, and three positive integers: the lag limit $L$, the number of blocks $B$, and the number of random permutations $R$.
+\item[\textbf{Step 1:}] Compute the set of cross dependence sample statistics $\{\TDCor_{n}(\vec{X}, \vec{Y}_{-l}), l=0,\ldots,L\}$. Here, $(\vec{X}, \vec{Y}_{-l})$ denotes the sample data with $l$ lags apart, which consists of $(n-l)$ pairs of observations:
+\begin{align*}
+    (\vec{X}, \vec{Y}_{-l}) = \{(X_{1+l},Y_{1}),(X_{2+l},Y_{2}),\ldots,(X_{n},Y_{n-l})\}.
+\end{align*}
+\item[\textbf{Step 2:}] Estimate the optimal dependence lag:
+\begin{align*}
+    \hat{L}^{*} &= \arg\max_{l \in [0,L]} \left(\frac{n-l}{n}\right) \cdot \TDCor_{n}(\vec{X}, \vec{Y}_{-l}).
+\end{align*}
+Here, the weight $\left(\frac{n-l}{n}\right)$ simply weights each cross dependence statistic based on the number of observations it uses.
+\item[\textbf{Step 3:}] Compute the temporal dependence sample statistic:
+\begin{align*}
+    \TDCorX_{n}(\vec{X}, \vec{Y}) &= \sum_{l=0}^{L} \left(\frac{n-l}{n}\right) \cdot \TDCor_{n}(\vec{X}, \vec{Y}_{-l}).
+\end{align*}
+\item[\textbf{Step 4:}] Compute the p-value using block permutation:
+    \begin{align*}
+    \mbox{p-val} = \sum_{r=1}^{R}\mbox{I}(\TDCorX_{n}(\vec{X}, \vec{Y}) > \TDCorX_{n}(\vec{X}, \vec{Y}_{\pi_{B}})) / R,
+    \end{align*} 
+    where $\mbox{I}(\cdot)$ is the 0-1 indicator function, and $\pi_{B}$ is a randomly generated block permutation for each $r$.
+\item[\textbf{Output:}] The temporal dependence statistic $\TDCorX$, the corresponding p-value, and the estimated optimal dependence lag $\hat{L}^{*}$.
+\end{itemize}
+
+The null hypothesis is rejected if the p-value is less than a pre-specified Type 1 error level, such as $0.05$.
+    
+\subsection{Choice of Dependence Measure}
+
+While the algorithm can accommodate any dependence measure as the choice of $\TDCor_{n}(\cdot,\cdot)$, it is essential for the chosen measure to be well-behaved and satisfy the required assumptions outlined in Section~\ref{sec:assump}. This ensures consistency in detecting dependence between temporal data, both in terms of performance and subsequent theory. In our experiments, we employed distance correlation, Hilbert-Schmidt independence criterion, and multiscale graph correlation. All of these measures meet the necessary assumptions, and the resulting tests appear valid and consistent in our numerical experiments.
+
+As the proposed temporal statistic is essentially an aggregation of the underlying dependence measure, its effectiveness in capturing dependence is contingent upon the choice of dependence measure. It is well known that each dependence measure has its own unique strengths. Therefore, our usage of distance and kernel based statistics in this paper should be viewed as an illustration of the validity and consistency properties of the proposed temporal test. 
+
+Some examples of other dependence measures include correlation coefficients \cite{Fukumizu2007,Bießmann2010}, Chatterjee’s rank correlation \cite{Chatterjee2021, shi2021, shi2022}, the HHG method \cite{HellerGorfine2013,heller2016consistent}, projection correlation \cite{Zhu2017}, ball covariance \cite{Pan2020}, as well as recent high-dimensional dependence statistics \cite{Shao2019, Huo2022, DcorHD, Xu2024, Zhou2024}. All of these dependence measures can be directly incorporated into our temporal testing framework by simply modifying the cross-dependence statistics in Step 1. Such adaptations may offer better testing power for certain dependence structures.
+
+For instance, using the correlation coefficient with block permutation will only detect linear associations in temporal data, while a universally consistent dependence measure can detect all possible dependencies with a sufficiently large sample size; dependence measures that are better at detecting nonlinear or high-dimensional dependencies in standard i.i.d.~data will also perform better under such dependencies in the case of temporal data, requiring a smaller sample size to achieve perfect testing power; rank-based dependence measures can be more robust against data noise. 
+
+\subsection{The Block Permutation Test}
+The standard permutation test is widely used for independence testing \cite{GoodPermutationBook}. In a standard permutation, $\pi(\cdot)$ randomly permutes the indices $1, 2, \ldots, n$, resulting in $\vec{Y}_{\pi}$ and $\vec{X}$ that are mostly independent (except for a few indices that do not change position, which are asymptotically negligible as $n$ increases). Given sufficiently many random permutations, this process allows the permuted test statistics to estimate the true null distribution. 
+
+However, the above is only true under the standard i.i.d.~setting, and it no longer holds when there exists structural dependence within the sample sequence, such as when $(X_t, Y_t)$ are dependent with $(X_{t-1}, Y_{t-1})$. Specifically, the permuted statistics would under-estimate the true null distribution, leading to an inflation of the testing power. This issue has been noted in \cite{Mantel2013,DiCiccio2017}, which can affect any dependence measure that relies on the standard permutation test.
+
+To ensure validity of the test, we employ a block permutation procedure \cite{politis2003} denoted as $\pi_{B}(\cdot)$, where $B$ denotes the number of blocks. The construction of $\pi_{B}(\cdot)$ proceeds as follows: 
+
+We partition the index list into $B$ consecutive blocks. For $j=1,\ldots,B$, block $j$ consists of indices
+    \begin{align*}
+        B_j=(\lceil \frac{n}{B} \rceil * (j-1)+1, \lceil \frac{n}{B} \rceil * (j-1)+2,\ldots, \lceil \frac{n}{B} \rceil * j -1).
+    \end{align*}
+Note that for the last block, the last few indices may exceed $n$, in which case the indices wrap around and restart from $1$. 
+
+As an example, consider a sample size of $n = 100$ and $B = 20$ blocks, with each block containing $5$ indices. Then the first block would be $(Y_{1}, Y_{2}, ..., Y_{5})$, the second block would be $(Y_{6}, Y_{7}, ..., Y_{10})$, etc. During the block permutation process, each block is shifted to another position. For instance, the first block might be permuted to the fourth block, resulting in $\pi_{B}(1)=16,\pi_{B}(2)=17,\pi_{B}(3)=18,\pi_{B}(1)=19,\pi_{B}(1)=20$. This shuffling of blocks ensures a randomized distribution of data while maintaining the block structure.
+
+\subsection{Parameter Choice and Computational Complexity}
+
+The choice of the maximum lag, denoted as $L$, is typically determined based on subject matter considerations. For example, if the signal from one region of the brain can only influence another region within a range of $20$ time steps, then setting $L = 20$ would be appropriate. Similarly, when collecting daily stock trading data for two stocks, choosing $L = 30$ indicates that we are examining the dependence structure within the past month. 
+
+As for the number of blocks, we used $B = 20$ in our experiments, which is sufficient for our purposes. For the number of permutation, we used $R = 1000$ replicates. Assuming that the dependence measure can be computed in $O(n^2)$ time complexity (which is the case for distance correlation), the temporal independence test has a time complexity of $O(n^2 RL)$.
+
+\section{Supporting Theory}
+\label{sec:theory}
+
+In this section, we establish the asymptotic properties of the test statistics and the resulting tests, which include asymptotic convergence, validity, and consistency. All the proofs can be found in the appendix. We begin by outlining the necessary assumptions for the theoretical results, followed by detailed elaborations on each assumption.
+
+\subsection{Assumptions}
+\label{sec:assump}
+\begin{itemize}
+\item The observed data $\{(X_t, Y_t)\}_{t=1}^{n}$ is strictly stationary, non-constant, and the underlying distribution $F_{XY_{-l}}$ has finite moments for any lag $l \geq 0$. 
+\item There exists a maximum dependence lag $M$ such that for all $l \geq M$, the two time series are almost independent for large $n$, so are each time series within itself:
+    \begin{align*}
+        \sup|F_{X Y_{-l}} - F_{X}F_{Y}| &= O(\frac{1}{n}) ,\\
+        \sup|F_{X X_{-l}} - F_{X}F_{X}| &= O(\frac{1}{n}) ,\\
+        \sup|F_{Y Y_{-l}} - F_{Y}F_{Y}| &= O(\frac{1}{n}) .
+    \end{align*}
+\item The maximum dependence lag $M$ and the maximum lag under consideration $L$ are non-negative integers that satisfies $L \geq M$ and $L=o(n)$, i.e., they may increase together with $n$ but at a slower pace.
+\item As the sample size $n$ increases, both the number of blocks $B$ and the number of observations per block $\frac{n}{B}$ increase to infinity. Moreover, $\frac{n}{B} \geq M$ for sufficiently large $n$.
+\item The sample dependence measure has the following form:
+\begin{align*}
+        \TDCor_{n}(\vec{X},\vec{Y}) &=\frac{\sum_{i=1}^{n}\sum_{j=1}^{n} \gamma_{n}(i,j)}{n^2},
+    \end{align*} 
+    where each $\gamma_{n}(i,j)$ is a function of $(X_i,X_j, Y_i,Y_j)$, and remaining sample pairs may also be used but with a weight of $O(1/n)$.
+\item In the standard i.i.d.~setting where $(X_1,Y_1), (X_2, Y_2),\ldots, (X_n, Y_n) \stackrel{i.i.d.}{\sim} F_{XY}$, there exists a population statistic $\TDCor(X, Y)$ defined solely based on the joint distribution $F_{XY}$. When $i \neq j$, each term in the sample statistic satisfies:
+\begin{align*}
+        \EE(\gamma_{n}(i,j)) &= \TDCor(X, Y) + o(1).
+    \end{align*} 
+    Moreover, the population statistic $\TDCor(X, Y)$ is non-negative and equals $0$ if and only if $X$ and $Y$ are independent, i.e., $F_{XY}=F_{X} F_{Y}$.
+\end{itemize}
+
+The first assumption is a common one in time series research. The key distinction from the standard i.i.d.~setting is that the samples are no longer independent, but remain identically distributed. For non-stationary data, there exist many common techniques to remove trends and process them into approximately stationary processes \cite{cleveland1990stl,hastie2009elements,enders2010applied,shumway2010time,box2015time}. Some examples include differencing, where one computes the difference between consecutive observations; detrending via linear regression or polynomial fitting and subtracting the trend component from the original series; seasonal adjustment by decomposition; log / square root / Box-Cox transformation to stabilize variance; smoothing via moving averages to reduce noise and short-term fluctuations; filtering to remove specific frequencies from the data. 
+
+The second and third assumptions require that the time series exhibit independence for sufficiently large lags beyond $M$, and that the maximum lag to be examined, $L$, must be no less than $M$. Such an assumption shares similarity with the mixing property, where a stochastic process is mixing if its values at widely-separated times are asymptotically independent \cite{Tran1985,McDonald11a,Ziemann2022}. Hence, our results can also be considered approximately true for mixing time series.
+
+The fourth assumption imposes a regularity condition on block permutation. In theory, choices for $B$ can be $log(n)$ or $\sqrt{n}$, while a practical choice like $B=20$ is sufficient for our simulations. This resembles the Bayes optimal condition for K-nearest-neighbor, where $K$ is required to increase to infinity but slower than $n$.
+
+The remaining assumptions regarding the dependence measure are satisfied by a variety of distance and kernel measures that have been recently proposed. For example, distance covariance satisfies the two assumptions, with
+\begin{align*}
+    \gamma_{n}(i,j) = \{d(X_i, X_j) - \mu_{X_i} - \mu_{X_j} + \mu_{X}\}\{d(Y_i, Y_j) - \mu_{Y_i} - \mu_{Y_j} + \mu_{Y}\}.
+\end{align*} 
+Here, $d(\cdot, \cdot)$ is the Euclidean distance, $\mu_{X_i}$ denotes the mean of all distance pairs relative to $X_i$ within $\vec{X}$, and $\mu_{X}$ is the mean of the whole pairwise distance matrices of $\vec{X}$. Furthermore, the population distance covariance is defined in terms of characteristic functions and equals $0$ if and only if $F_{XY}=F_{X} F_{Y}$ in the standard i.i.d.~settings. Indeed, many dependence measures that are universal consistent in the standard i.i.d.~setting satisfy this assumption. For example, the Hilbert-Schmidt independence criterion utilizes the same formulation \cite{exact2,dino2013} on the Gaussian kernel. Additionally, the unbiased distance covariance and distance correlation, as well as the multiscale graph correlation -- a truncated version of distance correlation where large distance pairs may be unused -- also satisfy this assumption.
+
+\subsection{Convergence of the Sample Statistics}
+
+We begin by proving the convergence of the sample cross dependence to the population cross dependence:
+\begin{theorem}
+    \label{thm:sampling_dist}
+     The cross dependence sample statistic satisfies:
+    \begin{align*}
+     \EE(\TDCor_{n}(\vec{X}, \vec{Y}_{-l})) - \TDCor(X, Y_{-l}) = o(1),\\
+     \text{Var}(\TDCor_{n}(\vec{X}, \vec{Y}_{-l})))  = O(\frac{1}{n-l}).
+     \end{align*}
+
+     Therefore, for each $l \in \{0,...,L\}$, we have
+     \begin{align*}
+     \TDCor_{n}(\vec{X}, \vec{Y}_{-l}) \stackrel{n \rightarrow \infty}{\rightarrow} \TDCor(X, Y_{-l})
+     \end{align*}
+     in probability.
+\end{theorem}
+Theorem \ref{thm:sampling_dist} shows that both the bias and variance of the cross dependence statistic diminish to $0$ as the sample size $n$ increases. Consequently, this guarantees that the aggregated temporal dependence statistic and the estimated optimal lag also converge to their corresponding population forms in probability.
+\begin{theorem}
+    \label{thm:optlag}  
+    The temporal dependence sample statistic satisfies:
+    \begin{align*}
+     \TDCorX_{n}(\vec{X}, \vec{Y}) \stackrel{n \rightarrow \infty}{\rightarrow} \sum_{l=0}^{L}\TDCor(X, Y_{-l}).
+     \end{align*}
+     The estimated optimal dependence lag satisfies:
+     \begin{align*}
+     \hat{L}^{*} \stackrel{n \rightarrow \infty}{\rightarrow} \arg\max_{l \in [0,L]} \TDCor(X, Y_{-l}).
+     \end{align*}
+\end{theorem}
+
+\subsection{Validity and Consistency for Testing Temporal Independence}
+In this subsection we establish the validity and consistency of the method. Specifically, if $\vec{X}$ and $\vec{Y}$ are independent, the power of the test equals the Type 1 error level $\alpha$. Conversely, if $\vec{X}$ and $\vec{Y}$ are dependent, the power of the test converges to $1$, and the method can consistently detect any dependence. 
+
+Given $\TDCorX_{n}(\vec{X}, \vec{Y})$ as the observed test statistic, let $F_{T_{n}^{B}}(z)$ be the empirical distribution of the block-permuted statistics $\{\TDCorX_{n}(\vec{X}, \vec{Y}_{\pi_{B}})\}$, and denote $z_{n, \alpha}$ as the critical value where:
+\begin{align*}
+F_{T_{n}^{B}}(z)(z_{n,\alpha})=1-\alpha.
+\end{align*}
+The following theorem establishes the asymptotic validity of our block permutation test:
+\begin{theorem}[Asymptotic Validity]
+    \label{thm:valid}
+    Under the null hypothesis that $\vec{X}$ and $\vec{Y}$ are independent for all lags $l \in [0,L]$, the test statistic satisfies:
+    \begin{align*}
+       \TDCorX_{n}(\vec{X}, \vec{Y}) \stackrel{n\rightarrow \infty}{\rightarrow} 0.
+       \end{align*}
+    Moreover, the block-permutation test is asymptotically valid, i.e., 
+    \begin{align*}
+       Prob(\TDCorX_{n}(\vec{X}, \vec{Y}) \geq z_{n,\alpha}) \stackrel{n\rightarrow \infty}{\rightarrow} \alpha.
+       \end{align*}
+\end{theorem}
+
+The next theorem proves that the method is universally consistent against any alternative.
+
+\begin{theorem}[Testing Consistency]
+    \label{thm:consistent}
+     Under the alternative hypothesis that $\vec{X}$ and $\vec{Y}$ are dependent for some lag $l \in [0,L]$, the test statistic satisfies 
+    \begin{align*}
+       \TDCorX_{n}(\vec{X}, \vec{Y}) \stackrel{n\rightarrow \infty}{\rightarrow} c>0.
+       \end{align*}
+    Moreover, the block-permutation test is asymptotically consistent, i.e., 
+    \begin{align*}
+       Prob(\TDCorX_{n}(\vec{X}, \vec{Y}) \geq z_{n,\alpha}) \stackrel{n\rightarrow \infty}{\rightarrow} 1.
+       \end{align*}
+\end{theorem}
+
+\section{Simulations}
+\label{sec:sims}
+
+We estimated the testing power of the proposed approach through simulations on various temporal dependence structures. Specifically, we considered three different implementations of the proposed temporal dependence statistic, which utilized distance correlation ($\dcorr$), Hilbert-Schmidt independence criterion ($\hsic$), and multiscale graph correlation ($\Mgc$). For comparison, we included \shift{} \cite{shifthsic}, \wild{} \cite{wildhsic}, and the widely recognized \texttt{\LB{}} test \cite{LB} using traditional cross-correlations. Each simulation was repeated $300$ times, with $1000$ permutations and a Type 1 error level of $\alpha=0.05$ used to compute the $p$-values. The testing power is measured by how often the p-value is lower than $0.05$ out of the $300$ Monte-Carlo simulations. Analysis of \shift{} and \wild{} was performed using MATLAB code\footnote{\url{https://github.com/kacperChwialkowski/HSIC/}} and \texttt{wildBootstrap}\footnote{\url{https://github.com/kacperChwialkowski/wildBootstrap}}.
+
+\subsection{Testing Power Evaluation}
+ \paragraph{Independence}
+ First, we check the validity of the tests by generating two independent, stationary autoregressive time series with a lag of one:
+ \begin{equation*}
+     \begin{bmatrix}
+     X_t\\
+    Y_t
+    \end{bmatrix}
+     =
+     \begin{bmatrix}
+     \phi & 0\\
+     0 & \phi
+     \end{bmatrix}
+     \begin{bmatrix}
+     X_{t-1}\\
+     Y_{t-1}
+     \end{bmatrix}
+     +
+     \begin{bmatrix}
+     \epsilon_t\\
+     \eta_t
+     \end{bmatrix}.
+ \end{equation*}
+ Here, $(\epsilon_t,\eta_t)$ are standard normal noise terms. As shown in Figure \ref{fig:indep}, the proposed methods maintain a testing power close to $\alpha=0.05$ across varying $n$ and $\phi$, regardless of the statistic used.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/mgcx/figure1}
+    \caption{This figure illustrates the validity of the tests using two independent time series. In the left panel, the testing power is computed as the sample size increases, with an AR coefficient of $\phi=0.5$. The right panel keeps the sample size at $n=1200$ while varying the AR coefficient $\phi$, with the noise variance appropriately adjusted by $(1 - \phi^2)$, based on the same simulation as in \cite{shifthsic}. The dashed black line represents the significance level $\alpha=0.05$. 
+    } \label{fig:indep}
+\end{figure}
+
+\paragraph{Linear Dependence}
+Next, we assess our methods' ability to capture linear relationships in the following simulation:
+\begin{equation*}
+    \begin{bmatrix}
+    X_t\\
+    Y_t
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+    0 & \phi\\
+    \phi & 0
+    \end{bmatrix}
+    \begin{bmatrix}
+    X_{t-1}\\
+    Y_{t-1}
+    \end{bmatrix}
+    +
+    \begin{bmatrix}
+    \epsilon_t\\
+    \eta_t
+    \end{bmatrix}.
+\end{equation*}
+As this represents a straightforward linear relationship, the \texttt{\LB{}} test, based on auto-correlation, is expected to perform best. This is indeed the case in the left panel of Figure~\ref{fig:const}. Our proposed methods using $\dcorr${}, $\Mgc${}, and \hsic{} follow closely, quickly converging to perfect power around $n=100$. In contrast, the other competitors do not perform well in this scenario. This is not surprising, as the \shift~method is designed to detect whether $X_t$ and $Y_t$ are dependent at lag $0$, whereas the linear dependence here is of lag $1$. The \wild~method used a wild bootstrap method to estimate the null distribution, which can be inaccurate at small sample size.
+
+\paragraph{Nonlinear Dependence}
+The next simulation considers a nonlinear dependent model: 
+\begin{equation*}
+    \begin{bmatrix}
+    X_t\\
+    Y_t
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+    \epsilon_t Y_{t-1}\\
+    \eta_t
+    \end{bmatrix}.
+\end{equation*}
+In the right panel of Figure~\ref{fig:const}, our proposed methods utilizing $\dcorr${}, $\Mgc${}, and \hsic{} demonstrate superior performance compared to other competing methods. Notably, the \hsic{} and $\Mgc${} implementations exhibit better finite-sample power, as these two dependence measures are better at identifying nonlinear relationships than $\dcorr${}. In contrast, all other tests fail to detect dependence in this scenario. %It is worth noting that despite \wild~and \shift~performing poorly in the linear and nonlinear cases, their flaw comes from the test procedure and not the kernel dependence measure. Specifically,  when we use the kernel dependence measure in our proposed test, its performance aligns with that of the \dcorr~and$\Mgc$~implementations.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/mgcx/figure2.pdf}
+    \caption{The testing power for linear (left panel) and nonlinear (right panel) simulations based on $300$ replicates. } \label{fig:const}
+\end{figure}
+
+\paragraph{Extinct Gaussian} 
+This simulation uses the same extinct Gaussian process from \cite{shifthsic}, where
+\begin{equation*}
+    \begin{bmatrix}
+    X_t\\
+    Y_t
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+    \phi & 0\\
+    0 & \phi
+    \end{bmatrix}
+    \begin{bmatrix}
+    X_{t-1}\\
+    Y_{t-1}
+    \end{bmatrix}
+    +
+    \begin{bmatrix}
+    \epsilon_t\\
+    \eta_t
+    \end{bmatrix},
+\end{equation*}
+and we set $n=1200$. Here, the $(\epsilon_t, \eta_t)$ pair are dependent and drawn from an Extinct Gaussian distribution with two additional parameters: $e$ (extinction rate) and $r$ (radius). Both variables are initially drawn from independent standard normal, and $U$ is sampled from standard uniform. If either $\epsilon_t^2 + \eta_t^2 > r$ or $U > e$ holds, then $(\epsilon_t, \eta_t)$ are returned; otherwise, they are discarded and the process is repeated. In this process, the dependence between $\epsilon_t$ and $\eta_t$ increases with extinction rate $e$. Therefore, we expect power to increase with the extinction rate, which is indeed the case as shown in Figure \ref{fig:extinct}. While all methods, except \LB, are consistent and eventually achieve perfect power, our proposed method using $\Mgc${} stands out as the best performer.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=1.0\textwidth]{figures/mgcx/figure3}
+    \caption{The testing power for the extinct gaussian simulation based on $300$ replicates.} \label{fig:extinct}
+\end{figure}
+
+\subsection{Optimal Dependence Lag Estimation}
+\label{sim2}
+In this subsection, we evaluate the method's performance in estimating the optimal dependence lag in both linear and nonlinear settings. The linear setting is
+\begin{equation*}
+    \begin{bmatrix}
+    X_t\\
+    Y_t
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+    0 & \phi_1\\
+    \phi_1 & 0
+    \end{bmatrix}
+    \begin{bmatrix}
+    X_{t-1}\\
+    Y_{t-1}
+    \end{bmatrix}
+    +
+    \begin{bmatrix}
+    0 & \phi_3\\
+    \phi_3 & 0
+    \end{bmatrix}
+    \begin{bmatrix}
+    X_{t-3}\\
+    Y_{t-3}
+    \end{bmatrix}
+    +
+    \begin{bmatrix}
+    \epsilon_t\\
+    \eta_t
+    \end{bmatrix},
+\end{equation*}
+where we set $\phi_3=0.8  > \phi_1=0.1$ such that the true optimal dependence lag equals $3$.
+The nonlinear simulation is
+\begin{equation*}
+    \begin{bmatrix}
+    X_t\\
+    Y_t
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+    \epsilon_t Y_{t-3}\\
+    \eta_t
+    \end{bmatrix}.
+\end{equation*}
+% 
+In both simulations, the true optimal dependence lag equals $3$. Figure \ref{fig:lag} shows that the proposed method using either $\dcorr${} or $\Mgc${} consistently estimates the optimal dependence lag as the sample size increases, and $\Mgc$~outperforms $\dcorr$~in the nonlinear setting. 
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/mgcx/opt_lag_sim_corr_ar3.pdf}
+    \includegraphics[width=0.9\textwidth]{figures/mgcx/opt_lag_sim_nonlin_lag3.pdf}
+    \caption{This figure displays the performance of our proposed method using both $\Mgc$ and $\dcorr$ for estimating the optimal dependence lag $\hat{L}^{*}$ in linear and nonlinear relationships. The colored bar above lag $l$ shows the empirical frequency of $\hat{L}^{*}=j$, with red representing $\Mgc$ and purple representing $\dcorr$. The probability is estimated based on $100$ trials. The first row shows $\dcorr$ estimation performance at sample sizes $n=15, 30, 60$ for linear relationships, while the second row shows the $\Mgc$ performance on the same data. The third row displays $\dcorr$ estimation for nonlinear relationships, and the last row presents the same for $\Mgc$.
+    } \label{fig:lag}
+\end{figure}
+
+\subsection{Multivariate Simulations}
+In this subsection, we revisit the testing power and dependence lag estimation in both linear and nonlinear settings, maintaining a fixed sample size of $n=100$ and increasing the dimensionality $p$, to evaluate performance for multivariate data.
+
+For testing power evaluation, we use the following multivariate linear setting:
+\begin{equation*}
+    \begin{bmatrix}
+    X_t\\
+    Y_t
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+    0 & \phi D\\
+    \phi D & 0
+    \end{bmatrix}
+    \begin{bmatrix}
+    X_{t-1}\\
+    Y_{t-1}
+    \end{bmatrix}
+    +
+    \begin{bmatrix}
+    \epsilon_t\\
+    \eta_t
+    \end{bmatrix},
+\end{equation*}
+where $\phi = 0.65$, $D\in \mathbb{R}^{p\times p}$ is a diagonal matrix where the elements are $D_{ii} = 1 / i$, and $\epsilon_t, \eta_t$ are standard normal of dimension $p$. In a similar manner, we use the following multivariate nonlinear setting:
+\begin{equation*}
+    \begin{bmatrix}
+    X_t\\
+    Y_t
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+    D (\epsilon_t \odot Y_{t-1})\\ 
+    \eta_t
+    \end{bmatrix},
+\end{equation*}
+where $\odot$ denotes element-wise multiplication. We intentionally design the matrix $D$ as a decaying weight, reflecting a meaningful multivariate simulation where additional dimensions contain weaker dependence signals.
+
+Figure~\ref{fig:multivariate1} illustrates the testing power as dimensionality increases. At a fixed sample size, all testing powers gradually decrease as $p$ increases. The proposed method using any of $\Mgc$, $\dcorr$, or \hsic~maintains relatively stable power with slow degradation in the case of linear dependence. The same trend is observed for nonlinear dependence, although the degradation is faster, with the $\Mgc$~statistic performing the best. It is worth emphasizing that due to the consistent property, if we fix $p$ and let $n$ increase, the testing power for our method shall increase to $1$. 
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/mgcx/multivariate_power.pdf}
+    \caption{This figure shows the testing power for multivariate simulations, with a constant sample size of $n=100$ while increasing the dimensionality.
+    } \label{fig:multivariate1}
+\end{figure}
+
+Similarly, we extend the optimal lag estimation into the following two multivariate settings: 
+\begin{align*}
+    \begin{bmatrix}
+    X_t\\
+    Y_t
+    \end{bmatrix}
+    &=
+    \begin{bmatrix}
+    0 & \phi_1 D\\
+    \phi_1 D & 0
+    \end{bmatrix}
+    \begin{bmatrix}
+    X_{t-1}\\
+    Y_{t-1}
+    \end{bmatrix}
+    + 
+    \begin{bmatrix}
+    0 & \phi_3 D\\
+    \phi_3 D & 0
+    \end{bmatrix}
+    \begin{bmatrix}
+    X_{t-3}\\
+    Y_{t-3}
+    \end{bmatrix}
+    +
+    \begin{bmatrix}
+    \epsilon_t\\
+    \eta_t
+    \end{bmatrix}.\\
+    \begin{bmatrix}
+    X_t\\
+    Y_t
+    \end{bmatrix}
+    &=
+    \begin{bmatrix}
+    D (\epsilon_t \odot Y_{t-3})\\
+    \eta_t
+    \end{bmatrix},
+\end{align*}
+where $\phi_1 = 0.1$ and $\phi_3= 0.65$. These settings are similar to those in Section~\ref{sim2}, with the addition of increasing dimension and $D$. The true optimal lag remains $3$. The estimation accuracy, as shown in Figure~\ref{fig:multivariate2}, demonstrates successful detection at small $p$, with accuracy gradually degrading as $p$ increases.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/mgcx/multivariate_lag.pdf}
+    \caption{This figure shows the accuracy of estimating the true optimal lag in multivariate simulations, maintaining a constant sample size of $n=100$ while increasing the dimensionality. Note that in the left panel, the lines representing $\dcorr$~ and \hsic~ overlap due to their almost identical performance.
+    } \label{fig:multivariate2}
+\end{figure}
+
+\section{Analyzing Connectivity in the Human Brain}
+\label{sec:app}
+
+This study is based on data from an individual (Subject ID: 100307) of the Human Connectome Project (HCP), which can be downloaded online\footnote{\url{https://www.humanconnectome.org/study/hcp-young-adult/data-releases}}. The human cortex is parcellated into 180 parcels per hemisphere using the HCP multi-modal parcellation atlas \cite{glasser}. For this study, 22 parcels were selected as regions of interest (ROIs), representing various locations across the cortex. These parcels are denoted as $X^{(1)}, \dots, X^{(22)}$. Each parcel consists of a contiguous set of vertices whose fMRI signal is projected on the cortical surface. Averaging the vertices within a parcel yields a univariate time series $X^{(u)} = (X^{(u)}_1, \dots, X^{(u)}_n)$, where $n = 1200$ in this particular case.
+The selected ROIs, their parcel number in the HCP multi-modal parcellation \cite{glasser}, and assigned network are listed in Table \ref{fig:roi}. 
+\begin{table}[ht]
+    \centering
+    \begin{tabular}{ l | l | l | l | l}
+     ROI ID & Network & Shorthand & Parcel Key & Parcel Name\\ 
+     \hline
+     1 & Visual Network & Visual & 1 & V1\\
+     2 & Visual Network & Visual	& 23 & MT\\
+     3 & Visual Network & Visual	& 18 & FFC\\
+     4 & Somatomotor Network & SM	& 53 & 3a\\
+     5 & Somatomotor Network & SM	& 24 & A1\\
+     6 & Dorsal Attention Network & dAtt & 96 & 6a\\
+     7 & Dorsal Attention Network & dAtt & 117 & API\\
+     8 & Dorsal Attention Network & dAtt & 50 & MIP\\
+     9 & Dorsal Attention Network & dAtt & 143 & PGp\\
+     10 & Ventral Attention Network & vAtt & 109 & MI\\
+     11 & Ventral Attention Network & vAtt & 148 & PF\\
+     12 & Ventral Attention Network & vAtt & 60 & p32pr\\
+     13 & Ventral Attention Network & vAtt & 38 & 23c\\
+     14 & Limbic Network & Limbic & 135 & TF\\
+     15 & Limbic Network & Limbic & 93 & OFC\\
+     16 & FrontoParietal Network & FP & 83 & p9-46v\\
+     17 & FrontoParietal Network & FP & 149 & PFm\\
+     18 & Default Mode Network & DMN & 150 & PGi\\
+     19 & Default Mode Network & DMN & 65 & p32pr\\
+     20 & Default Mode Network & DMN & 161 & 32pd\\
+     21 & Default Mode Network & DMN & 132 & TE1a\\
+     22 & Default Mode Network & DMN & 71 & 9p
+    \end{tabular}
+    \caption{This table displays the parcellation information for the parcels used in our analysis. The first column shows the numeric order of the parcels as they appear in the following figures. The second and third columns show the shorthand and full names, respectively, of the network to which each parcel belongs. The last two columns display the parcel number and name according to the \cite{glasser} parcellation.}
+    \label{fig:roi}
+\end{table}
+
+As the temporal dependence method using $\Mgc$~performed well in our simulations, we simply use the $\Mgc$~implementation in this analysis. In the left panel of Figure \ref{fig:app}, we present the optimal dependence lag for each interdependency, ranging up to $L=10$. Meanwhile, the right panel of Figure \ref{fig:app} displays the log-scale $p$-values of temporal dependence for each pair of parcels. Generally, we observe strong relationships with small lags within the same region, such as an optimal lag of usually $0$ within the "DMN" region with significant p-values. In contrast, inter-region dependencies are less significant and typically exist at longer lags.
+% 
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.42\linewidth]{figures/mgcx/optimal_lag.png}
+    \includegraphics[width=0.48\linewidth]{figures/mgcx/pval.pdf}
+    %\includegraphics[width=0.95\linewidth]{optimal_scale.png}
+    \caption{This displays the results of applying the temporal dependence method using $\Mgc$ to resting-state fMRI data. 
+    }
+    \label{fig:app}
+\end{figure}
+
+%n addition, Figure \ref{fig:app} (bottom) presents the optimal scale at which the local correlation is maximized. 
+%for pairs of time series ${X^{(u)}_t}$ and ${X^{(v)}_t}$. 
+%Many of the time series pairs within the default mode and visual networks exhibit a normalized optimal scale of (1,1), suggesting a linear dependence between the signals in these regions. In contrast, nonlinear dependencies are observed among pairs of signals in many other networks.
+
+
+\section{Conclusion}
+\label{sec:discussion}
+This paper introduces a new independence testing procedure for temporal data. The method combined the strengths of nonparametric dependence measures, the specialized cross-lag statistic for time series, and the block permutation procedure. As a result, it provides an asymptotically valid and universally consistent approach with outstanding numerical performance. While the exposition of this manuscript is focused on time series data, this work marks an important step in extending independence testing to structural data beyond the realm of standard i.i.d.~data, making them more attractive and broadly applicable.
+
+There are several avenues for future research that warrant exploration. Firstly, although we have demonstrated the asymptotic validity of the block permutation test, its computational efficiency remains a challenge when dealing with large sample sizes. Recent studies \cite{zhang2018,fast1} have investigated faster testing procedures by approximating the null distribution of distance and kernel correlations under the standard i.i.d.~setting. Extending such approaches to structural data could significantly enhance computational scalability.
+
+Secondly, dependence measures are commonly employed in dimension reduction techniques, such as screening \cite{FanLv2008,LiZhongZhu2012}, especially in high-dimensional data settings. However, little attention has been given to the temporal domain. While it is straightforward to utilize dependence measures for dimension reduction in multivariate time series, delving into their theoretical properties and their relationships with other standard tools, such as independence component analysis, could provide valuable insights.
+
+Thirdly, causal inference in time series data is an important task \cite{haufe2010sparse,winkler2016validity}. While it is widely recognized that correlation does not imply causality, recent research has demonstrated the utility of dependence and conditional dependence tests in causal inference \cite{cai2022distribution,laumann2023kernel}. Therefore, extending this framework to encompass conditional independence and causal inference may significantly advance the understanding of causal inference in time series data.
+
+\section{Supplemental Materials}
+\subsection{Assumptions}
+We begin by revisiting the theoretical assumptions listed in the main paper:
+\begin{itemize}
+\item The observed data $\{(X_t, Y_t)\}_{t=1}^{n}$ is strictly stationary, non-constant, and the underlying distribution $F_{XY_{-l}}$ has finite moments for any lag $l \geq 0$. 
+\item There exists a maximum dependence lag $M$ such that for all $l \geq M$, the two time series are almost independent for large $n$, so are each time series within itself:
+    \begin{align*}
+        \sup|F_{X Y_{-l}} - F_{X}F_{Y}| &= O(\frac{1}{n}) ,\\
+        \sup|F_{X X_{-l}} - F_{X}F_{X}| &= O(\frac{1}{n}) ,\\
+        \sup|F_{Y Y_{-l}} - F_{Y}F_{Y}| &= O(\frac{1}{n}) .
+    \end{align*}
+\item The maximum dependence lag $M$ and the maximum lag under consideration $L$ are non-negative integers that satisfies $L \geq M$ and $L=o(n)$, i.e., they may increase together with $n$ but at a slower pace.
+\item As the sample size $n$ increases, both the number of blocks $B$ and the number of observations per block $\frac{n}{B}$ increase to infinity. Moreover, $\frac{n}{B} \geq M$ for sufficiently large $n$.
+\item The sample dependence measure has the following form:
+\begin{align*}
+        \TDCor_{n}(\vec{X},\vec{Y}) &=\frac{\sum_{i=1}^{n}\sum_{j=1}^{n} \gamma_{n}(i,j)}{n^2},
+    \end{align*} 
+    where each $\gamma_{n}(i,j)$ is a function of $(X_i,X_j, Y_i,Y_j)$, and remaining sample pairs may also be used but with a weight of $O(1/n)$.
+\item In the standard i.i.d.~setting where $(X_1,Y_1), (X_2, Y_2),\ldots, (X_n, Y_n) \stackrel{i.i.d.}{\sim} F_{XY}$, there exists a population statistic $\TDCor(X, Y)$ defined solely based on the joint distribution $F_{XY}$. Each term in the sample statistic satisfies:
+\begin{align*}
+        \EE(\gamma_{n}(i,j)) &= \TDCor(X, Y) + o(1).
+    \end{align*} 
+    Moreover, the population statistic $\TDCor(X, Y)$ is non-negative and equals $0$ if and only if $X$ and $Y$ are independent, i.e., $F_{XY}=F_{X} F_{Y}$.
+\end{itemize}
+
+\subsection{Theorem Proofs}
+\begin{theorem}
+     The cross dependence sample statistic satisfies:
+    \begin{align*}
+     \\EE(\TDCor_{n}(\vec{X}, \vec{Y}_{-l})) - \TDCor(X, Y_{-l}) = o(1),\\
+     \text{Var}(\TDCor_{n}(\vec{X}, \vec{Y}_{-l}))  = O(\frac{1}{n-l}).
+     \end{align*}
+
+     Therefore, for each $l \in \{0,...,L\}$, we have
+     \begin{align*}
+     \TDCor_{n}(\vec{X}, \vec{Y}_{-l}) \stackrel{n \rightarrow \infty}{\rightarrow} \TDCor(X, Y_{-l})
+     \end{align*}
+     in probability.
+\end{theorem}
+\begin{proof}
+First, applying the assumptions on the dependence measure to the cross dependence statistics yields:
+\begin{align*}
+\TDCor_{n}(\vec{X}, \vec{Y}_{-l}) &=\frac{\sum_{i=l+1}^{n}\sum_{j=l+1}^{n} \gamma_{n-l}(i,j)}{(n-l)^2}, \\
+\EE(\gamma_{n-l}(i,j)) &= \TDCor(X, Y_{-l}) + o(1).
+\end{align*}
+Here, each $\gamma_{n-l}(i,j)$ is a function of $(X_i,X_j, Y_{i-l},Y_{j-l})$, and remaining sample pairs like $(X_u,X_v, Y_{w},Y_{z})$ may also be used but with a weight of $O(1/n)$.
+
+As expectations are additive, it immediately follows that 
+\begin{align*}
+\EE(\TDCor_{n}(\vec{X}, \vec{Y}_{-l})) &= \frac{\sum_{i=l+1}^{n}\sum_{j=l+1}^{n} \EE(\gamma_{n-l}(i,j))}{(n-l)^2}\\
+&= \frac{\sum_{i=l+1}^{n}\sum_{j=l+1}^{n} \{\TDCor(X, Y_{-l}) + o(1)\}}{(n-l)^2} \\
+&= \TDCor(X, Y_{-l}) + o(1).
+\end{align*}
+Next, the variance equals
+\begin{align*}
+\text{Var}(\TDCor_{n}(\vec{X}, \vec{Y}_{-l})) &= \frac{Cov(\sum_{i=l+1}^{n}\sum_{j=l+1}^{n} \gamma_{n-l}(i,j), \sum_{u=l+1}^{n}\sum_{v=l+1}^{n} \gamma_{n-l}(u,v))}{(n-l)^4}.
+\end{align*}
+Therefore, it suffices to consider each covariance term $Cov(\gamma_{n-l}(i,j),\gamma_{n-l}(u,v))$, and there are $(n-l)^4$ such terms. 
+
+When both $|u-i|>M$ and $|v-j|>M$, the maximum dependent lag possible, we have
+\begin{align*}
+Cov(\gamma_{n-l}(i,j),\gamma_{n-l}(u,v)) =  O(\frac{1}{n-l}).
+\end{align*}
+Otherwise it is
+\begin{align*}
+Cov(\gamma_{n-l}(i,j),\gamma_{n-l}(u,v))=  O(1).
+\end{align*}
+There are a total of $O((n-l)^2(n-M)^2)$ covariance terms of magnitude $O(\frac{1}{n-l})$, while the remaining $O((n-l)^3)$ covariance terms are of magnitude $O(1)$. Consequently, as $M=o(n)$, we have
+\begin{align*}
+\text{Var}(\TDCor_{n}(\vec{X}, \vec{Y}_{-l})) &= \frac{O((n-l)^2(n-M)^2) * O(\frac{1}{n-l}) + O((n-l)^3) * O(1)}{(n-l)^4}\\
+&= O(\frac{1}{n-l}),
+\end{align*}
+which converges to $0$ as $n$ increases.
+
+With the expectation converging to the population statistic and the variance approaching $0$, we can conclude that
+\begin{align*}
+     \TDCor_{n}(\vec{X}, \vec{Y}_{-l}) \stackrel{n \rightarrow \infty}{\rightarrow} \TDCor(X, Y_{-l})
+     \end{align*}
+     in probability.
+\end{proof}
+
+\begin{theorem}
+    The temporal dependence sample statistic satisfies:
+    \begin{align*}
+     \TDCorX_{n}(\vec{X}, \vec{Y}) \stackrel{n \rightarrow \infty}{\rightarrow} \sum_{l=0}^{L}\TDCor(X, Y_{-l}).
+     \end{align*}
+     The estimated optimal dependence lag satisfies:
+     \begin{align*}
+     \hat{L}^{*} \stackrel{n \rightarrow \infty}{\rightarrow} \arg\max_{l \in [0,L]} \TDCor(X, Y_{-l}).
+     \end{align*}
+\end{theorem}
+\begin{proof}
+By Theorem~\ref{thm:sampling_dist}, each $\TDCor_{n}(\vec{X}, \vec{Y}_{-l})$ converges to $\TDCor(X, Y_{-l})$ with a variance of $O(\frac{1}{n-l})$.
+
+Recall the definition of the temporal dependence statistic $\TDCorX_{n}(\vec{X}, \vec{Y})$ as
+\begin{align*}
+\TDCorX_{n}(\vec{X}, \vec{Y}) &= \sum_{l=0}^{L} \left(\frac{n-l}{n}\right) \cdot \TDCor_{n}(\vec{X}, \vec{Y}_{-l}).
+\end{align*}
+Then the expectation satisfies
+\begin{align*}
+\EE(\TDCorX_{n}(\vec{X}, \vec{Y})) &= \sum_{l=0}^{L} \left(\frac{n-l}{n}\right) \cdot \TDCor(X, Y_{-l}) + o(L)\\
+&\stackrel{n\rightarrow \infty} \rightarrow \sum_{l=0}^{L} \TDCor_{n}(\vec{X}, \vec{Y}_{-l})
+\end{align*}
+by noting that $L$ is fixed and the weight $\frac{n-l}{n}$ converges to $1$. Moreover, the variance satisfies
+\begin{align*}
+Var(\TDCorX_{n}(\vec{X}, \vec{Y})) = O(\frac{L^2}{n-L}),
+\end{align*}
+which also converges to $0$. Consequently,
+\begin{align*}
+     \TDCorX_{n}(\vec{X}, \vec{Y}) \stackrel{n \rightarrow \infty}{\rightarrow} \sum_{l=0}^{L}\TDCor(X, Y_{-l})
+     \end{align*}
+     in probability.
+     
+Similarly, the estimated optimal dependence lag satisfies 
+\begin{align*}
+    \hat{L}^{*} &= \arg\max_{l \in [0,L]} \left(\frac{n-l}{n}\right) \cdot \TDCor_{n}(\vec{X}, \vec{Y}_{-l}) \\
+    &\stackrel{n\rightarrow \infty}{\rightarrow} \arg\max_{l \in [0,L]} \TDCor(X, Y_{-l})
+\end{align*}
+in probability.
+\end{proof}
+
+\begin{theorem}[Asymptotic Validity]
+    Under the null hypothesis that $\vec{X}$ and $\vec{Y}$ are independent for all lags $l \in [0,L]$, the test statistic satisfies:
+    \begin{align*}
+       \TDCorX_{n}(\vec{X}, \vec{Y}) \stackrel{n\rightarrow \infty}{\rightarrow} 0.
+       \end{align*}
+    Moreover, the block-permutation test is asymptotically valid, i.e., 
+    \begin{align*}
+       Prob(\TDCorX_{n}(\vec{X}, \vec{Y}) \geq z_{n,\alpha}) \stackrel{n\rightarrow \infty}{\rightarrow} \alpha.
+       \end{align*}
+\end{theorem}
+\begin{proof}
+By Theorem~\ref{thm:optlag}, we have
+\begin{align*}
+\TDCorX_{n}(\vec{X}, \vec{Y}) \stackrel{n \rightarrow \infty}{\rightarrow} \sum_{l=0}^{L}\TDCor(X, Y_{-l}).
+\end{align*}
+From the assumption of the population measure, when $X_t$ and $Y_t$ are independent for all lags $l \in [0,L]$, we must have
+\begin{align*}
+\TDCor(X, Y_{-l}) =0
+\end{align*}
+for all $l \in [0,L]$. As a result, 
+\begin{align*}
+\TDCorX_{n}(\vec{X}, \vec{Y}) \stackrel{n \rightarrow \infty}{\rightarrow}  0
+\end{align*}
+
+To establish the asymptotic validity of the block permutation test, it suffices to prove that when $\vec{X}$ and $\vec{Y}$ are independent, we have:
+\begin{align*}
+\mbox{sup} |F_{T_{n}(\vec{X}, \vec{Y})} - F_{T_{n}^{b}} | \stackrel{n\rightarrow \infty}{\rightarrow} 0.
+\end{align*}
+In other words, if the true null distribution and the permuted distribution is asymptotically the same, then it follows that under the null hypothesis:
+\begin{align*}
+       Prob(\TDCorX_{n}(\vec{X}, \vec{Y}) \geq z_{n,\alpha}) \stackrel{n\rightarrow \infty}{\rightarrow} \alpha.
+       \end{align*}
+
+Here, $\TDCorX_{n}(\vec{X},\vec{Y})$ is a function of $(X_i,X_j, Y_u,Y_v)$ for $i,j,u,v=1,2,\ldots,n$, and the permuted statistic $\TDCorX_{n}(\vec{X},\vec{Y}_{\pi_{B}})$ is the same function but on $(X_i,X_j, Y_{u'},Y_{v'})$, where $u'$ and $v'$ represent the permuted indices of $u$ and $v$. Therefore, it suffices to prove that under the null hypothesis, the distribution of $(X_i,X_j, Y_{u'},Y_{v'})$ converges to the distribution of $(X_i,X_j, Y_u,Y_v)$ for sufficiently large $n$. Note that under the standard i.i.d.~setting, these two distributions are identical under the null hypothesis where $X$ and $Y$ are independent.
+
+We first consider the case where both $u$ and $v$ belong to the same block. In this case, $u'$ and $v'$ will also be in the same block and differ by the same lag difference. Furthermore, due to the stationary assumption, $F_{Y_u,Y_v} = F_{Y_{u'},Y_{v'}}$. Now, as we are examining the null distribution where $\vec{X}$ and $\vec{Y}$ are independent, it follows that
+    \begin{align*}
+        F_{X_i,X_j, Y_u,Y_v} = F_{X_i,X_j}F_{Y_u,Y_v} = F_{X_i,X_j}F_{Y_{u'},Y_{v'}} =F_{X_i,X_j, Y_{u'},Y_{v'}}.
+    \end{align*}
+Namely, $(X_i,X_j, Y_u,Y_v)$ and $(X_i,X_j, Y_{u'},Y_{v'})$ are identically distributed in this case.
+
+Next we examine the case where $u$ and $v$ belong to different blocks. Given our assumption of a maximum dependence lag $M$, if $|u-v| > M$ and $|u'-v'| > M$ for the permuted indices, we can establish the following:
+    \begin{align*}
+       & \mbox{sup} |F_{X_i,X_j,Y_u,Y_v} - F_{X_i,X_j, Y_{u'},Y_{v'}} |\\
+        =& \mbox{sup} |F_{X_i,X_j}F_{Y_u,Y_v} - F_{X_i,X_j} F_{Y_{u'},Y_{v'}} |\\
+        \leq & \mbox{sup} |F_{X_i,X_j}(F_{Y_u,Y_v} - F_{Y_{u}}F_{Y_{v}}) |+\mbox{sup} |F_{X_i,X_j}(F_{Y_{u}}F_{Y_{v}} - F_{Y_{u'}}F_{Y_{v'}} )|\\
+        &+\mbox{sup} |F_{X_i,X_j}(F_{Y_{u'}}F_{Y_{v'}} - F_{Y_{u'},Y_{v'}})  |\\
+        &=o(1)
+    \end{align*}
+Here, the first and third terms are $o(1)$ as per our maximum dependence lag assumption, while the second term is exactly $0$ because the marginals within the brackets remain identical before and after permutation. Consequently, in this case, $(X_i,X_j, Y_u,Y_v)$ is asymptotically equivalent in distribution to $(X_i,X_j, Y_{u'},Y_{v'})$.
+
+Finally, in the case where $u$ and $v$ belong to different blocks, there are two additional possibilities: either $|u-v| \leq M$ or $|u-v| \leq M$. In either case, we no longer have exact distribution equivalence nor asymptotic equivalence. The number of instances where $(X_i,X_j, Y_u,Y_v)$ does not match $(X_i,X_j, Y_{u'},Y_{v'})$ in distribution is at most $O(MB)$, which equals $o(n^2)$ by our assumption on $M$ and $B$.
+
+Therefore, taking all the above arguments together, as the sample size $n$ goes to infinity, we have:
+\begin{align*}
+Prob(  \mbox{sup} |F_{X_i,X_j,Y_u,Y_v} - F_{X_i,X_j, Y_{u'},Y_{v'}} | \rightarrow 0) \rightarrow 1
+\end{align*}
+for any random block permutation $\pi_{B}$ satisfying our assumption. As the result,
+\begin{align*}
+Prob(  \mbox{sup} |F_{\TDCorX_{n}(\vec{X},\vec{Y})} - F_{\TDCorX_{n}(\vec{X},\vec{Y}_{\pi_{B}})} | \rightarrow 0) \rightarrow 1.
+\end{align*}
+Namely, the sample statistic and the block-permuted statistic have asymptotically the same distribution, and the test is asymptotically valid.
+\end{proof}
+
+\begin{theorem}[Testing Consistency]
+     Under the alternative hypothesis that $\vec{X}$ and $\vec{Y}$ are dependent for some lag $l \in [0,L]$, the test statistic satisfies 
+    \begin{align*}
+       \TDCorX_{n}(\vec{X}, \vec{Y}) \stackrel{n\rightarrow \infty}{\rightarrow} c>0.
+       \end{align*}
+    Moreover, the block-permutation test is asymptotically consistent, i.e., 
+    \begin{align*}
+       Prob(\TDCorX_{n}(\vec{X}, \vec{Y}) \geq z_{n,\alpha}) \stackrel{n\rightarrow \infty}{\rightarrow} 1.
+       \end{align*}
+\end{theorem}
+\begin{proof}
+From the assumption on the dependence measure, when there exists at least one lag $l$ such that the two time series are dependent, we must have:
+\begin{align*}
+\TDCor(X, Y_{-l}) = c_{-l} >0.
+\end{align*}
+As all other cross dependence sample statistics are non-negative, it follows that
+\begin{align*}
+\TDCorX_{n}(\vec{X}, \vec{Y}) \stackrel{n \rightarrow \infty}{\rightarrow} \sum_{l=0}^{L}c_{-l} > 0
+\end{align*}
+
+To prove consistency under the permutation test, it suffices to show that at any type $1$ error level $\alpha$, when the two time series are dependent for some lag, the p-value of sample dependence measure is less than $\alpha$ as the sample size approaches infinity. Note that Theorem 8 in \cite{mgc-jasa} proved consistency of standard permutation test between two i.i.d.~sample data, and the follow-on proof has similar steps but with significant adjustment for the block permutation procedure.
+
+In the block permutation test, the p-value can be expressed as follows:
+\begin{align*}
+& Prob(\TDCorX_{n}(\vec{X}, \vec{Y}_{\pi_B}) > \TDCorX_{n}(\vec{X}, \vec{Y})) \\
+= &\ \sum_{w=0}^{B} Prob(\TDCorX_{n}(\vec{X}, \vec{Y}_{\pi_B}) > \TDCorX_{n}(\vec{X}, \vec{Y}) | \pi_B \mbox{ is a partial derangement of size $w$})\\
+& \times Prob(\mbox{partial derangement of size $w$}).
+\end{align*}
+This expression conditions on the block permutation being a partial derangement of size $w \in [0,B]$, where $w=0$ implies that $\pi_{B}$ is a derangement where no two blocks remain in their original positions, and $w=B$ means that $\pi_{B}$ does not permute any blocks.
+
+As $B \rightarrow \infty$, from the basic property of derangement\footnote{\url{https://en.wikipedia.org/wiki/Rencontres_numbers}} we have
+\begin{align*}
+&Prob(\mbox{partial derangement of size $w$}) \rightarrow e^{-1} / w!. 
+\end{align*}
+Because $\TDCorX_{n}(\vec{X}, \vec{Y}) \rightarrow c >0$ under dependence, it suffices to prove that for any $c >0$,
+\begin{align}
+\label{eq:permconsistency}
+\lim_{n\rightarrow \infty} e^{-1}\sum_{w=0}^{B} Prob(\TDCorX_{n}(\vec{X}, \vec{Y}_{\pi_B})  > c | \mbox{ partial derangement of size $w$}) / w! \rightarrow 0.
+\end{align}
+%\url{https://en.wikipedia.org/wiki/Rencontres_numbers}.
+We decompose the above summations into two different cases. The first case is when $w$ is of fixed size, then $\vec{X}$ and $\vec{Y}_{\pi_B}$ are asymptotically independent. This is because, for fixed $w$, the number of observations that are not moved is fixed and asymptotically goes to $0$, and all remaining blocks are shifted to different positions. By the maximum dependence lag $M$, which is $o(n)$, and the number of samples per block being larger than $M$, the block permutation makes all other observation pairs asymptotically independent. Therefore, given $i,j$, and $i',j'$ being their block-permuted indices, we must have 
+\begin{align*}
+       & \mbox{sup} | F_{X_i,X_j, Y_{i'}, Y_{j'}} - F_{X_i,X_j}F_{Y_{i'},Y_{j'}}|=o(1)
+    \end{align*}
+so long $|i'-i|>M$ and $|j'-j|>M$, which asymptotically holds for all blocks who moved the block position. Therefore, when $w$ is a fixed size, $\vec{X}$ and $\vec{Y}_{\pi_B}$ are asymptotically independent, and we have
+\begin{align*}
+       & \TDCorX_{n}(\vec{X}, \vec{Y}_{\pi_B}) \rightarrow 0
+    \end{align*}
+as the sample statistic converges to the population, and the population statistic equals $0$ under independence.
+
+The other case is the remaining partial derangements $\pi_{B}$ of increasing size $w$, but these partial derangements occur with probability converging to $0$. Formally, for any $\alpha > 0$, there exists $B_{1}$ such that 
+\begin{align*}
+e^{-1} \sum_{w=B_{1}+1}^{+\infty} 1/w! < \alpha / 2.
+\end{align*}
+This is because $\sum\limits_{w=0}^{B} 1/w!$ is bounded above and converges to $e$. Then back to the first case, we can find $B_{2}>B_{1}$ such that for any $w\leq B_{1}$ and all $B > B_{2}$,
+\begin{align*}
+ Prob(\TDCorX_{n}(\vec{X}, \vec{Y}_{\pi_B})  > c | \mbox{ partial derangement of size $w$}) < \alpha / 2.
+\end{align*}
+Therefore, for all $B > B_{2}$:
+\begin{align*}
+& e^{-1} \sum_{w=0}^{B} Prob(\TDCorX_{n}(\vec{X}, \vec{Y}_{\pi_B})  > c | \mbox{ partial derangement of size $w$}) /w!\\
+< &\ e^{-1} \sum_{w=0}^{B_{1}} \alpha / 2 w! + e^{-1} \sum_{w=B_{1}+1}^{B} 1 / w!\\
+< &\ \alpha.
+\end{align*}
+Thus the convergence in Equation~\ref{eq:permconsistency} holds.
+
+In conclusion, at any type $1$ error level $\alpha>0$, the p-value of the temporal dependence sample statistic under the block permutation test will eventually be less than $\alpha$ as $n$ increases. Therefore, the proposed test is consistent against all dependencies with finite second moments, and its testing power converges to $1$ when the time series $\vec{X}$ and $\vec{Y}$ are dependent.
+\end{proof}
