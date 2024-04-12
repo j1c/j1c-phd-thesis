@@ -22,6 +22,8 @@ jobs:
           texlive_version: 2023
           root_file: |
             00-main.tex
+          working_directory: ./
+          work_in_root_file_dir: true 
           args: "-pdf -file-line-error -interaction=nonstopmode"
       - name: Rename file 
         run: mv 00-main.pdf j1c-thesis.pdf
