@@ -22,6 +22,7 @@ jobs:
           texlive_version: 2023
           root_file: |
             00-main.tex
+          args: "-pdf -file-line-error -interaction=nonstopmode"
       - name: Rename file 
         run: mv 00-main.pdf j1c-thesis.pdf
       - name: Upload a Build Artifacts
