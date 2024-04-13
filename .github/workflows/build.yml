@@ -25,6 +25,7 @@ jobs:
           working_directory: ./
           work_in_root_file_dir: true 
           args: "-pdf -file-line-error -interaction=nonstopmode"
+          latexmk_use_xelatex: true
       - name: Rename file 
         run: mv 00-main.pdf j1c-thesis.pdf
       - name: Upload a Build Artifacts
