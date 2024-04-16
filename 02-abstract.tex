@@ -1,63 +1,23 @@
 \chap{Abstract} 
-Advances in \textit{in vivo} brain imaging techniques have empowered neuroscientists to generate extensive datasets characterizing human brains. Detailed maps of neural connectivity – termed connectomes - offer two fundamental perspectives: structural connectomes chart the physical wiring of the brain, while functional connectomes map patterns of correlated activity across brain regions. Investigating this diverse population of connectomes is vital for deciphering how brain structure gives rise to its function. This research will shed light on the principles guiding brain development, the neurological changes associated with disease, how our brains are shaped by experience, and the evolutionary trajectory of the human brain.  Functional magnetic resonance imaging (fMRI), in particular, has been transformative in our ability to capture dynamic brain states. Mapping how these states shift across rest and task conditions provides a window into the essential mechanisms of information processing, behavior, and our brain's remarkable capacity to adapt (1,2).
 
+Advances in \textit{in vivo} brain imaging techniques have empowered neuroscientists to generate extensive datasets characterizing brains. Detailed maps of neural connectivity – termed connectomes - offer two fundamental perspectives: structural connectomes chart the physical wiring of the brain, while functional connectomes map patterns of correlated activity across brain regions. Investigating this diverse population of connectomes is vital for deciphering the principles guiding brain development, the neurological changes associated with disease, how our brains are shaped by experience, and the evolutionary trajectory of the human brain. Despite the progress in measuring connectomes at the scale at large, techniques for extracting meaning from these complicated datasets have lagged behind.
 
+This thesis develops novel methods to enhance our understanding of connectome populations, with a focus on human structural and functional networks.  It begins by reviewing existing statistical models and algorithms for analyzing connectomes and networks as well as improvements to existing algorithms for comparing connectomes. Next, it presents novel methods for investigating the heritability of structural connectomes within a causal analysis framework, while leveraging statistical modeling for connectomes. Additionally, we introduce a new method to quantify temporal dependencies within functional connectomes using generalized correlation measures. To foster broader research impact, these tools are made accessible to the neuroscience community and beyond through a documented, tested, open-source Python package.
 
-Second paragraph
-1. Thesis focuses on  developing methods for improving our understanding of connectomics data, with a focus on the application of these methods to the connectomes from humans.
-2. Overview of current statistical models and algorithms, describing their assumptions, strengths and weaknesses.
-3. New improved algorithm for comparing a pair of connectomes.
-4. Heritability
-5. The tools used and developed as part of this thesis are also made available to the wider neuroscience community and beyond, via the development of documented, tested, open-source Python code to implement these algorithms.
-
-Third paragraph
-Taken together, this thesis represents an advancement in the algorithmic analysis
-of connectome data. This kind of analysis will be particularly important going forward,
-as larger and more complicated connectomes are generated, and in particular, when
-multiple connectome samples are collected which require quantitative comparison
-
-
-Neuroscientists have made tremendous progress in our ability to measure the structure of neural circuits. Detailed maps of neural wiring – termed connectomes – are increasingly studied in neuroscience because they have the potential to improve our understanding of how structure relates to function, how the structure of the brain is generated, how it changes with evolution or disease or experience. Despite this progress in measuring connectomes at the scale of individual neurons and the synapses between them, techniques for extracting meaning from these complicated datasets have lagged behind.
-
-Understanding the dynamic links between brain structure, activity, and behavior remains a fundamental challenge in neuroscience. Functional magnetic resonance imaging (fMRI) has revolutionized our ability to map brain states, revealing their shifts across rest and task conditions. These dynamic states are essential for information processing, behavior generation, and adaptation (1,2). Furthermore, specific brain states correlate with behavioral outcomes like attention, reaction time, and cognitive flexibility. However, fMRI's high cost, limited temporal resolution, and restrictive imaging environment hinder its widespread use in personalized diagnostics and interventions (3). This proposal seeks to bridge this gap by using readily accessible non-MRI modalities like electroencephalography (EEG) and peripheral physiological measures, whose temporal precision offer complementary insights into brain dynamics. We will leverage and extend existing interpretable algorithms like random forests to develop predictive models of fMRI-based brain states, and to identify non-MRI signatures of fMRI-based large-scale functional network activity. We apply our approach to open-source datasets, such as the Naturalistic Viewing Dataset (4), and targeted data from children with potential psychological and neurodevelopmental conditions. Successful completion of this proposal includes an open-source software package that is vigorously tested and extensible.
-
-This thesis focuses on developing methods for improving our understanding of
-connectomics data, with a focus on the application of these methods to the connectome
-of a Drosophila larva brain. In particular, this thesis describes methods for characterizing the general structure of a connectome, including analysis of connectivity-based
-cell types, characterization of feedforward and feedback structure in a biological
-neural network, and tools for assessing sensory convergence within the brain using
-network traversal methods. Then, this thesis presents novel methods for comparing
-and aligning connectome datasets via a focus on the comparison of the left and right
-hemispheres of this Drosophila larva brain. The first method enables a statistical
-comparison of cell type connection probabilities in the left and the right hemispheres,
-enabling quantitative assessment of which parts of the two connectome datasets have
-the most significant deviations. The second method enables high-accuracy automated
-prediction of neuron-to-neuron pairings across the two sides of this connectome by
-augmenting techniques for graph matching. The tools used and developed as part of
-this thesis are also made available to the wider neuroscience community and beyond,
-via the development of documented, tested, open-source Python code to implement
-these algorithms.
-
-Taken together, this thesis represents an advancement in the algorithmic analysis
-of connectome data. This kind of analysis will be particularly important going forward,
-as larger and more complicated connectomes are generated, and in particular, when
-multiple connectome samples are collected which require quantitative comparison
-
+Collectively, this thesis advances the algorithmic analysis of connectome data. As the field of connectomics expands, generating increasingly complex and large-scale datasets, these sophisticated analytical methods will be essential. Ultimately, this work brings us closer to a better understanding of the brain's intricate workings.
 
 
 %%%%  committee members (add it right after the abstract w/o page break)
 \begin{singlespace}
 
-\section*{Primary reader and thesis advisor:}
+\section*{Thesis Readers}
 
 Dr. Joshua T. Vogelstein (Primary Advisor)\\
 Associate Professor \\
 Department of Biomedical Engineering\\
 Johns Hopkins University, Baltimore, MD 
 
-%% if you have co-advisor, add here w/ \vspace{0.1in} as shown below
-
-\section*{Secondary readers:}
+\vspace{0.1in}
 
 Dr. Carey E. Priebe \\
 Professor \\

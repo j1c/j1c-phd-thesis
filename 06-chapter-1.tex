@@ -1,3 +1,22 @@
 \chapter{Introduction} \label{chap-intro}
 \pagebreak
 
+Understanding the dynamic links between brain structure, activity, and behavior remains a fundamental challenge in neuroscience. 
+
+Understanding the complex relationship between cognitive function and brain connectivity patterns—known as connectal coding—holds the potential to unlock profound insights into the inner workings of the human mind. By analyzing how these connectivity patterns link to past experiences, present behaviors, and future predictions, we can push the boundaries of neuroscience research.
+
+Network representations provide a powerful framework to model the intricate web of connections within the brain. However, traditional machine learning approaches often face limitations when applied to network data. Statistical network models offer a tailored solution, allowing us to explore generative processes and make informed comparisons between networks. Importantly, it's crucial to interpret any findings within the context of these models and their underlying assumptions.
+
+1. note that statistical models can deal with noise
+
+Understand the relationship between cognitive phenotypes and  models of brain connectivity, which we refer to as connectal coding, link patterns of brain connectivity to past, ongoing, and future events.
+
+Networks have been a ubiquitous way to represent relational data. There are numerous applications to  neuroscience, using modeling the brain as a network where the nodes are regions of the brain and edges represent measure of connectivity between nodes. However, there are numerous challenges to studying networks, and normal machine learning algorithms designed for tabular data doesn't apply to networks without violating assumptions of the algorithms. To this end, we use statistical models for representing networks.  Generative statistical model for the network allow us to make some modeling assumptions about the nature of the networks being compared. We stress that our subsequent results should be interpreted in light of these models and what they do (and do not) tell us about these networks.
+
+In Networks provide a powerful framework for modeling the complex relationships within datasets. Neuroscience, with its focus on the interconnected regions of the brain, is a prime example of a field where network representations excel.  However, analyzing networks poses unique challenges that traditional machine learning cannot easily overcome.   Statistical network models offer a solution, providing a foundation for understanding and comparing networks – but it's crucial to remember the inherent assumptions and limitations of these models. The first part of this thesis (Chapter \ref{chap:statistical}) introduces an overview of the existing statistical models for networks, algorithms, and their applications to network data. 
+
+Further, connectomics is beginning to scale not just in the size of the datasets we are collecting, but also the number of related brain maps we can generate. For instance, a recent work mapped eight C. elegans nerve cords across development. Other work is underway to map a male adult fly brain, which, naturally, we will want to compare to the female adult fly brain [13]. To make connectomics into the substrate for actual
+hypothesis testing (rather than generation) in many contexts, we require methods for quantitatively comparing connectome datasets, and for testing hypothesis about the differences between them. The next two parts of this thesis explore methods in this direction, focusing on connectome comparison via hypothesis testing (Chapter 3), and then methods for estimating an alignment of the neurons of two connectome networks based on their observed connectivity (Chapter 4). For both of these approaches, the methods are demonstrated using the Drosophila larva brain as a motivating example and to ensure that the methods are applicable to real problems in connectomics.
+
+Lastly, it is crucial to make the computation and network analysis tools developed within this thesis widely available to foster collaboration and accelerate discoveries. Chapter \ref{chap:graspologic} introduces ``graspologic'', an open-source Python software package which implemented these methods. This package, along with its comprehensive documentation, tutorials, and support from the developers, empowers the neuroscience community and other researchers to leverage these techniques, driving advancements in our understanding of brain connectivity and its related fields.
+
