@@ -1,0 +1,286 @@
+\chapter[MRI to Connectomes]{A low-resource reliable pipeline to democratize multi-modal connectome estimation and analysis} \label{chap:m2g}
+
+This chapter introduces an end-to-end pipeline for estimating connectomes from diffusion and functional MRI. This chapter is currently in review at Nature Methods, and a preprint is available at bioRxiv (DOI: \url{}) and is distributed under the terms of a Creative Commons Attribution License that permits unrestricted use and redistribution provided that the original author and source are credited.
+
+\pagebreak 
+\section*{Abstract}
+Connectomics---the study of brain networks---provides a unique and valuable opportunity to study the brain. Research in human connectomics, leveraging functional and diffusion Magnetic Resonance Imaging (MRI), is a resource-intensive practice. Typical analysis routines require significant computational capabilities and subject matter expertise. Establishing a pipeline that is low-resource, easy to use, and off-the-shelf  (can be applied across multifarious datasets without parameter tuning to reliably estimate plausible connectomes), would significantly lower the barrier to entry into connectomics, thereby democratizing the field by empowering a more diverse and inclusive community of connectomists. We therefore introduce `MRI to Graphs' (\texttt{m2g}). To illustrate its properties, we used \texttt{m2g} to process MRI data from 35 different studies ($\approx$ 6,000 scans) from 15 sites without any manual intervention or parameter tuning. Every single scan yielded an estimated connectome that adhered to established properties, such as  stronger ipsilateral than contralateral connections in structural connectomes, and stronger homotopic than heterotopic correlations in functional connectomes. Moreover, the connectomes estimated by \texttt{m2g} are more similar within individuals than between them, suggesting that \texttt{m2g} preserves biological variability. \texttt{m2g} is portable, and can run on a single CPU with 16 GB of RAM in less than a couple hours, or be deployed on the cloud using its docker container. All code is available on \url{https://github.com/neurodata/m2g} and documentation is available on \url{docs.neurodata.io/m2g}.
+\pagebreak
+
+\section{Introduction}
+Human brain imaging, especially Magnetic Resonance Imaging (MRI), has become a vital tool in both basic and clinical brain science~\cite{mrivalue}, with new analysis techniques being developed frequently. One group of techniques concerns itself with estimation and analysis of connectomes from MRI data, allowing for the use of graph theoretic mathematics and statistics to discern both functional and structural relationships. A connectome is a comprehensive map of relationships present in the brain at a given scale and time. The estimation of a connectome revolves around the number of connections, or edges, between different areas of the brain called regions of interest (ROIs). Where the boundaries lie for each of these regions of interest depends on the parcellation method used, as there are many different ways to group regions of the brain. Edges can represent a number of relationships between ROIs. For estimated structural connectomes, which are generated using diffusion-weighted MRI scans, edges represent the quantity of white-matter tracks that connect ROIs. For functional connectomes, which are estimated from blood oxygenation level dependent (BOLD) images, edges represent the correlation in activation between pairs of regions, as neuronal firing is shortly followed by a depletion of oxygen in surrounding capillaries as neurons prepare to fire again.
+
+The process of estimating a connectome from MRI data involves multiple steps, each with different inputs and outputs, and can be performed with a variety of parameters. There are two main approaches that can be taken in the design of a pipeline for estimating connectomes: (1) optimize the pipeline for each dataset you wish to analyze or (2) design a ``general'' pipeline that can be used on a variety of data. While creating an optimized pipeline for each dataset results in the "most accurate" connectomes for the data, it also limits the ability for the pipeline to be used with new data and for comparisons between datasets. Alternatively, the creation of a "standard" pipeline which can adequately estimate connectomes from a wide collection of datasets will allow for more confident comparison at the expense of potentially sub-optimal connectome estimation.  While there exist multiple pipelines which perform part or all of the processes required to estimate a connectome from MRI data, few exist which are easily accessible for individuals new to the field. Both \texttt{fmriprep} \cite{fmriprep} and \texttt{dmriprep} \cite{dmriprep} do not estimate a connectome from provided data: rather, they serve to preprocess data for further analysis by other software. Other MRI connectome estimation pipelines often require significant background knowledge or computational resources in order to be utilized effectively. For example, while the Human Connectome Pipeline (HCP) \cite{hcp} does have a docker container allowing for easy use, their structural connectome generation can take over 24 hours and require up to 24 GB while their functional connectome generation can take over 36 hours and require up to 24 GB depending on the duration of the fMRI scan.
+
+In hopes to expand the study of connectomes to a larger group of individuals, we developed a pipeline, called ''MRI to Graphs'' (\texttt{m2g}), which utilizes accepted approaches for connectome generation along with multiple open-source tools. The \texttt{m2g} pipeline serves to streamline the process of estimating connectomes for both functional and structural MRI data through handling the required preprocessing, graph generation, and quality assurance from one function call. Rather than providing bespoke analyses for each unique dataset, limiting their generalizability and likely increasing computational cost, \texttt{m2g} harmonizes processing to produce highly reliable data-derived quantities across a wide variety of datasets. To further the goal of a pipeline accessible to everyone, \texttt{m2g} also provides extensive quality assurance at each data processing stage in the form of easy to understand images, using widely accepted visualization formats.
+
+During development and testing, we used \texttt{m2g} to process 13 diffusion-weighted MRI (dMRI) studies comprising $\approx$720 individuals with $\approx$1,400 scans, and 30 functional MRI (fMRI) studies comprising $\approx$1,400 individuals with $\approx$3,500 scans---each of which was estimated using 35 different parcellation methods from the neuroparc repository~\cite{neuroparc}. Estimation of each of these connectomes was performed with one command line call, 3 CPUs, and $\approx$ 16 GB of RAM, in under an hour and a half from raw data to connectome. Due to the robustness of \texttt{m2g}, each connectome was estimated without issue and passed our surrogate metrics for plausibility. These connectomes, in addition to code and other data derivatives, are publicly available at \url{https://neurodata.io/mri/}.
+
+
+% These connectomes provided the data that led us to develop statistical connectomics methods to quantify various connectome properties, such as the relative probability of ipsilateral vs.~contralateral connections and homotopic vs.~heterotopic connections. While these properties have been previously noted in single studies~\cite{Stark2008,Zuo2010,Gee2011}, this work demonstrates that aspects of these properties are preserved both across individuals and studies upon optimizing and harmonizing the pipeline. Nonetheless, within session, site, study, and demographic cohorts, substantial variability remained in the \emph{magnitude} of these properties. 
+
+
+\section{Results}
+\begin{figure*}[t!]
+	\centering
+	\includegraphics[width=1\textwidth]{figures/m2g/m2g_pipeline.pdf}
+    \caption[The \texttt{m2g} pipeline has two sub-pipelines: \texttt{m2g-d} transforms Nifti-formatted dMRI data into sparse structural connectomes, and \texttt{m2g-f} organizes the data for processing by CPAC's functional pipeline that we developed here.]
+    {\textbf{Individual Level Pipeline}
+  The \texttt{m2g} pipeline has two sub-pipelines: \texttt{m2g-d} transforms Nifti-formatted dMRI data into sparse structural connectomes, and \texttt{m2g-f} organizes the data for processing by CPAC's functional pipeline that we developed here. Each sub-pipeline consists of four key steps, and each step generates both data derivatives and quality assurance figures to enable both qualitative assessments and quantitative comparisons. Detailed descriptions of the processes involved in each step can be found in the m2g Diffusion Workflow and m2g Functional Workflow sections.
+}
+	\label{fig:ndmgpipeline}
+\end{figure*}
+
+
+\subsection{The m2g Pipeline}
+
+The \texttt{m2g} pipeline consists of two separate sub-pipelines: \texttt{m2g-d}, which processes diffusion-weighted MRI scans to estimate structural connectomes, and \texttt{m2g-f}, which processes BOLD functional MRI scans to estimate functional connectomes. While the \texttt{m2g-d} sub-pipeline is locally contained in \texttt{m2g}, \texttt{m2g-f} has been integrated into CPAC \cite{cpac} as a Nipype pipeline, \cite{nypipe} which is called during the processing of functional MRI data. While the code itself was developed by our group, and the performance is monitored for consistency between updates, the \texttt{m2g-f} sub-pipeline is hosted and maintained by the FCP-INDI organization. The steps involved in each of these sub-pipelines are further discussed in the Methods section. Due to the focus on ease of use and generalizability, \texttt{m2g} only requires the path of the BIDs ~\cite{bidspec} organized input directory, the output directory, and which of the pipelines is to be run (with other parameters able to be specified by the user). Through calling \texttt{m2g} with the simplest parameters:
+\begin{verbatim}
+                m2g --<type> <input_directory> <output_directory>
+\end{verbatim}
+where  \texttt{<type>} is either \texttt{dwi} for the diffusion pipeline, \texttt{func} for the functional pipeline, or \texttt{both} for when both pipelines should be run, \texttt{m2g} is able to estimate connectomes. We used the \texttt{m2g} pipeline to successfully estimate all of the connectomes used in this manuscript with data consisting of both functional and diffusion MRI nifti files of varying voxel resolutions and acquisition methods (see \texttt{DatasetInfo.pdf} in the Supporting Materials for further details). 
+\texttt{m2g} is also able to process scans with non-isotropic voxels without issue due to the reslicing performed in both the \texttt{m2g-d} and \texttt{m2g-f} pipelines utilizing Dipy's reslice function with tri-linear interpolation ~\cite{dipy}. As reslicing an image to a different resolution results in the creation of new voxels with different intensity values, it may cause concern that there is significant change to  the information contained within the images and by extension the connectomes. However, it has been shown that such processing does not significantly change the information for both diffusion and functional MRI ~\cite{trilin1,trilin2}.
+
+In addition to visual inspection of quality assurance (QA) figures generated after each step in the pipeline, we used the discriminability metric, which evaluates the fraction of measurements from the same individual that are closer to one another than they are to the measurement of any other individual~\cite{discriminability}, as a benchmark to the performance of \texttt{m2g} during development. The \texttt{m2g-d} pipeline was optimized on the Kirby21 dataset \cite{Kirby21}, while the \texttt{m2g-f} pipeline was optimized on both the Kirby21 and IBATRT \cite{ibatrt} datasets because they are commonly used for test-retest analysis. Both pipelines were then validated using data from the Consortium of Reliability and Reproducibility (CoRR), consisting of 35 different studies from nearly 20 different institutions around the world, spanning the Americas, Europe, and Asia~\cite{corr}. The CoRR data collection efforts were not harmonized, and all data (regardless of quality) were requested to be shared. This data repository was thus well-suited to test the robustness of our pipeline. Several additional open-access datasets from other repositories with different acquisition details, such as ABIDE~\cite{abide1, abide2}, were also processed with \texttt{m2g}.
+
+The neuroparc repository of atlases, which we cultivated alongside \texttt{m2g}, was used as the main resource for the standardized parcellations used in \texttt{m2g}'s development ~\cite{neuroparc}. This repository served to consolidate atlases from a multitude of sources, each registered to MNI152 space at 1, 2, and 4 mm$^3$ voxel sizes~\cite{mni152}. Of the atlases listed there, 35 were used during the development of \texttt{m2g}. While neuroparc was developed in unison with \texttt{m2g}, the \texttt{m2g} pipeline is capable of utilizing any parcellation atlases provided by the user, provided it has been registered into MNI152 space~\cite{mni152}.
+
+Due to the lack of gold standards to determine the accuracy of an estimated connectome, % meaning whether the relationships estimated from the MRI data are representative of the "ground truth" of the connections present in an individual's brain, 
+certain forms of validation of the \texttt{m2g} pipeline are impossible. 
+However, we have used surrogate metrics for QA to increase confidence in the outputs. For each MRI, \texttt{m2g} ran to completion while passing a basic QA metric consisting of (1) each connectome is a single connected component% edge values associated with every ROI
+, (2) for all applicable datasets, discriminability values are above 0.7, (3) QA figures were generated successfully, (4) homophyly and homotopy observations are in agreement with literature. \texttt{m2g}'s ability to pass these metrics for validation shows its ability to be used widely, across a variety of datasets, including those leveraging older MRI technology.
+
+To visually inspect consistency in estimated connectomes across the datasets, a distance-dependent group consensus structural connectivity graph was created. This method serves to prevent the observed trend of down-weighting long-range connections ~\cite{struct_consensus} in conventional averaging of connectomes and preserves the network properties seen in individuals. A similar graph was created for the functional MRI data, called a group-averaged functional connectivity matrix \cite{func_consensus}, which serves to minimize the effect of inconsistent correlations (Figure~\ref{fig:meancon}). The reproducibility of the estimated connectomes was tested using discriminability~\cite{discriminability}, and network statistics to determine that biological diversity, i.e. structural or functional properties unique to each subjects, and connectome plausibility were maintained.
+
+%include something about passing to ranks?
+
+\begin{figure*}%[t!]
+	\centering
+	%\includegraphics[width=0.74\textwidth]{./figs/dwi_func_connectome2.pdf}
+	\includegraphics[width=.7\textwidth]{figures/m2g/figure2.pdf}
+    \caption[Group consensus structural connectome from  \texttt{m2g-d} (blue) and group consensus functional  connectomes from \texttt{m2g-f} (red).]
+    {\textbf{Group Consensus Connectomes}
+  Group consensus structural connectome from  \texttt{m2g-d} (blue) and group consensus functional  connectomes from \texttt{m2g-f} (red), using the DKT parcellation method \cite{desikan2006automated}. Structural connectomes of the datasets appear qualitatively similar, with minor deviations particularly visible in the contralateral regions of the connectomes (nodes 0-40 and 41-80). Ipsilateral connectivity is consistently more dense than contralateral connectivity in structural connectomes \cite{ipsi-struct}. The functional connectomes appear qualitatively similar to one another. Homotopic correlation is consistently higher than ipsilateral and contralateral connectivity, which agrees with existing knowledge about functional correlation in the brain~\cite{Stark-ipsi,Biswal-ipsi,Zuo-ipsi}.
+  }
+	\label{fig:meancon}
+\end{figure*}
+
+
+\subsection{Validated Connectomes}
+Connectomes were estimated by both \texttt{m2g-d} and \texttt{m2g-f} for 35 parcellations from the Neuroparc repository~\cite{neuroparc} (see \texttt{Parcellations.pdf} in Supporting Materials). As mentioned before, the "true" accuracy of estimated connectomes compared to the true functional and structural properties of individuals' brains is impossible to measure. Instead, we measure the reliability of the  \texttt{m2g} pipelines through the discriminability of each dataset (Figure \ref{fig:func_discrim}),  and evaluate validity through various proxies, including the amount of homophyly and homotopy between regions of interest (Figure \ref{fig:ipsi}), and manual inspection of extensive QA images generated during each major step of the pipelines (see Appendix for example Figures \ref{fig:diff_skull}-\ref{fig:func_motion}). The connectomes estimated by \texttt{m2g} consistently, regardless of parcellation method/dataset, had corresponding discriminability metrics above random chance and in certain conditions achieving optimal results. Analysis of the homophyly and homotopy from connectomes estimated by \texttt{m2g} were found to agree with well documented phenomena~\cite{ipsi-struct,Stark-ipsi,Biswal-ipsi,Zuo-ipsi}, and manual inspection of a random sampling of QA images found no major errors.
+
+\begin{figure*}%[t!]
+    \centering \offinterlineskip
+    % \includegraphics[width=1\textwidth]{./figs/disc_heatmap_vert.pdf}
+    \includegraphics[width=1\textwidth]{figures/m2g/figure3.pdf}
+    %\centering \includegraphics[width=0.85\textwidth]{./figs/func_heatmap_roi.pdf}
+    \caption[Discriminability values from each applicable diffusion (left) and functional (right) MRI dataset.]{\textbf{Discriminability Results}
+    Discriminability values from each applicable diffusion (left) and functional (right) MRI dataset. Relative row height denotes the relative size of the dataset. Rows, each representing a different parcellation, are organized from top to bottom by highest to lowest mean discriminability value. The mean discriminability value for each parcellation is displayed in the last column of both plots. The number of subjects/sessions is displayed next to the datasets' names in brackets and the number of ROI's in a given parcellation are shown in brackets if not mentioned in the parcellation name. Discriminability values for the structural connectomes was greater than 0.7 for the 32 of the 35 parcellations, while being robust to the number of scans per subject. Functional connectomes rarely had discriminability values lower than 0.7.}
+    \label{fig:func_discrim}
+\end{figure*}
+
+
+\subsubsection{Discriminability}
+Discriminability~\cite{discriminability}  was estimated for every dataset with multiple scans per subject (as reported in the Supporting Materials, which gives all of the individual numeric values). The closer to 1 the discriminability value of a processed dataset is, the more distinct the connectomes estimated from one individual's scans are from the connectomes of others. A discriminability value of one supports the estimated connectome capturing some unique functional or structural property for each of the subjects. The \texttt{m2g-d} pipeline estimated connectomes with discriminability values  greater than 0.7 for the 33 of the 35 parcellations (Figure~\ref{fig:func_discrim}, top). The discriminability measurements appear to be robust to the number of scans per subject, as can be seen with the SWU4 and HNU1 datasets (two scans per subject and ten scans per subject, respectively). In addition, \texttt{m2g-f} rarely estimated connectomes with discriminability values lower than 0.7 (Figure~\ref{fig:func_discrim}, bottom).
+
+
+\subsubsection{Connectome Connectivity}
+Because discriminability assesses the uniqueness of each individual's connectome, it does not guarantee that the connectome itself is biologically meaningful. 
+To address this issue, we analyzed the prominence of  different categories of connections---ipsilateral versus contralateral and   homotopic versus heterotopic---using the connectomes estimated from three unique parcellations. To analyze homotopic connections, we chose the DKT~\cite{desikan2006automated}, AAL~\cite{AAL}, and Hammersmith~\cite{Hammersmith} parcellations, due to their symmetric ROI placement (i.e. each ROI on the left hemisphere had a matching ROI on the right). For the structural connectomes, the percentage of total edges which belonged to each network were analyzed, while the absolute Pearson's correlation value~\cite{pearson} calculated by CPAC was used for the functional connectomes. The results coincided with well-documented phenomena regarding structural and functional relationships \cite{ipsi-struct,Stark-ipsi,Biswal-ipsi,Zuo-ipsi}. Namely, structural connectomes had significantly more ipsilateral than contralateral connections, while functional connectomes had significantly stronger homotropic correlations than heterotropic, either ipsilaterally or contralaterally (Figure \ref{fig:ipsi}). 
+% The results coincided with well documented  phenomena regarding structural and functional relationships \cite{ipsi-struct,Stark-ipsi,Biswal-ipsi,Zuo-ipsi}.
+
+\begin{figure}
+    \centering
+    %\includegraphics[width=1\textwidth]{figs/connectome_connect.pdf}
+    %\includegraphics[width=1\textwidth]{figs/connectome_connect3.pdf}
+    \includegraphics[width=1\textwidth]{figures/m2g/figure4.pdf}
+    \caption[Analysis of the edge weights of both structural (top) and functional (bottom) connectomes estimated using the DKT parcellation method.]{\textbf{Connectome biological plausibility results} Analysis of the edge weights of both structural (top) and functional (bottom) connectomes estimated using the DKT parcellation method. For the structural connectomes, the mean of the percentage of streamlines observed between ipsilateral, contralateral, and homotopic ROIs was recorded and plotted for each scan. Mean Pearson correlation coefficients between ipsilateral, contralateral, and homotopic ROIs was plotted for functional connectomes. A consistent significantly higher ratio of ipsilateral connections was observed across parcellation methods for structural connectomes, as well as a higher correlation between homotopic ROIs across parcellation methods in functional connectomes.}
+    %Put in mean and standard deviation for each of these statements.
+    \label{fig:ipsi}
+\end{figure}
+
+
+\subsubsection{Reproducibility}
+In the \texttt{m2g} pipeline, each processing procedure may introduce bias or noise in the estimated connectome. The randomized seed placement which takes place in the tractography step of the \texttt{m2g-d} pipeline, and the registration of the functional MRI data onto the T1-weighted image and the T1-weighted image onto the diffusion MRI data for \texttt{m2g-f} and \texttt{m2g-d}, respectively, serve as potential vectors for noise. To test the reproduciblity of \texttt{m2g}, we estimated connectomes for a subset of scans multiple times. Using a subset of five scans from each dataset, we used \texttt{m2g} to estimated connectomes five times per scan, using the same default parameters. The resulting connectomes were then treated as unique, with each set belonging to the same subject. Discriminability metrics were then calculated to determine whether the unique qualities of the individual scan were preserved. For all subsets, discriminability values of 1 were recorded for all parcellations for both the functional and structural connectomes. This supports the robustness of \texttt{m2g} to any bias or noise, as the unique properties of each subject are significant enough not to be altered. Additional testing using Spearman's rank correlation found that the repeated connectomes had a coefficient greater than 0.98 for all parcellations.
+
+%With respect to programmatic reproducibility, m2g fully supports execution via the Docker container platform. Container images are generated and uploaded to a public repository for each new version of m2g. These containers are released with version-controlled libraries for m2g and all its dependencies, maximizing run-to-run reproducibility in an easy way. This helps to address the widespread lack of reporting of specific software versions and the large variability of software, which threaten the reproducibility of MRI analyses \cite{}. The Docker image for m2g can be found at \url{https://neurodata.io/m2g/}%\url{https://hub.docker.com/r/neurodata/m2g}.
+
+\subsubsection{Quality Assurance Outputs}
+Quality assurance images were created by \texttt{m2g} at each of the significant steps in both the \texttt{m2g-d} and \texttt{m2g-f} pipelines (Figure \ref{fig:ndmgpipeline}) for easy determination of erroneous results. The QA figure formats were chosen for clarity and minimal image analysis expertise requirements in order to detect any potential errors. A random sample of the QA images from 15 estimated connectomes per dataset were visually inspected and found no significant issues. Samples of the output QA images can be found in the Appendix. Documentation for each of the QA figures generated by \texttt{m2g} can be found at \url{https://neurodata.io/mri/}. %\url{https://github.com/neurodata/m2g}.
+
+\subsection{Low Resource and Time Requirement}
+\begin{figure*}%[t!]
+	\centering
+    \includegraphics[width=0.9\textwidth]{figures/m2g/seperated_joyplot.pdf}
+    \caption{\textbf{Runtimes for Diffusion and Functional datasets}
+    Amount of time, in minutes, it took for \texttt{m2g} to generate a connectome for each of the scans in the datasets using the 35 brain parcellations. Computation time for diffusion datasets (blue) and functional datasets (red) varied based off of size and resolution of the input MRI files. In these time estimates, \texttt{m2g} was run utilizing 3 CPUs in parallel and at least 16 GB of RAM available.
+    }
+	\label{fig:runtime}
+\end{figure*}
+Computational expediency and resource efficiency were two key reasons we developed \texttt{m2g}. While the required resources for running \texttt{m2g} varies according to the data, the datasets mentioned in this paper could be processed by \texttt{m2g} with approximately 16 GB of RAM and 1 CPU core. If more resources are available, \texttt{m2g} is capable of utilizing multiple CPUs at the same at various points throughout the pipeline, such as registration and graph generation, to reduce runtime. While estimating the connectomes used in this manuscript, we recorded the time required for \texttt{m2g} to successfully analyze each of the scans used in the discriminability calculations (Figure \ref{fig:runtime}). The optimal configuration of resources for our purposes required 3 CPUs and 16 GB of RAM. When tested using 1 CPU, \texttt{m2g-d} took less than 120 minutes to complete the connectome creation using 35 parcellations for a given dMRI scan. The \texttt{m2g-f} pipeline likewise took less than 110 minutes to generate the set of connectomes. Additional CPUs were found to significantly increase the RAM requirements of the \texttt{m2g-f} pipeline, due to the configuration of CPAC.
+
+%Computational expediency and resource efficiency were  key  reasons to develop m2g. While the required resources for running m2g varies according to the data, the datasets mentioned in this paper could be  processed by m2g with approximately 16 GB of RAM and 1 CPU core. If more resources are available, m2g is capable of utilizing multi-threading at various points throughout the pipeline to reduce run-time at the cost of increased RAM requirements. Runtimes for the files of each dataset when m2g was used with 3 CPUs and 16 GB of RAM (Figure \ref{fig:runtime}).
+
+\section{Discussion}
+The \texttt{m2g} processing pipeline was created to both efficiently analyze diffusion and functional MRI scans and lower the barrier for entry to connectomics. It was developed to excel at three key aspects: ease of use, biological veracity, and computational reproducibility. We believe \texttt{m2g} to be a success with respect to these three aspects.
+
+Attesting to its ease of use, all datasets referenced in this manuscript were run through \texttt{m2g} with the default parameters and minimal user input, resulting in the successful generation of connectomes for each scan. This was true across a range of acquisition properties of the MR images and with modest computational resources: less than two hours for each scan using 16 GB of RAM and 3 CPUs and no intra-pipeline additional parallel processing steps. In addition, \texttt{m2g} requires very minimal user input: only the input/output locations, pipeline type, and acquisition method (for fMRI data).  As such, the pipeline is an easy tool for researchers and clinicians without extensive computer science experience or resources. Also, \texttt{m2g} produces comprehensive visual reports to analyze processing output: we designed the QA figures to easily visually determine whether the pipeline has successfully processed the provided data. With the emphasis on color coordination and concise figure generation, many issues in the preprocessing and registration process is easily visible. All QA figures are clearly labeled and placed in the same directory location relative to the output, regardless of pipeline being used, with detailed explanations found at \url{http://m2g.io}.
+
+%Preservation of Biological Veracity
+We assessed \texttt{m2g}'s ability to produce biologically plausible and realistic data using multiple approaches.  First, and most simply, we determined that there was a path from each ROI to each other ROI, i.e., that the brain was connected, which we know to be generally true. Second, our visual inspection of output QA figures showed no obvious abnormalities that would negatively effect the accuracy of the connectome. Third, we computed the discriminability for each dataset. Discriminability surpassed statistical tests of random chance for essentially all parcellations across datasets. In fact, the majority of the 35 parcellation methods used in this analysis resulted in discriminability values above 0.8 (Figure \ref{fig:func_discrim}). Fourth, we assessed the relative fraction of ipsilateral versus contralateral, and homotopic versus heterotopic connections. 
+% Analysis of the connection ratios in the generated connectomes also supported the biological "truth" of the connectomes. 
+Results were consistent with current knowledge about the anatomical and functional realities of neuro-typical brains~\cite{ipsi-struct,Stark-ipsi,Biswal-ipsi,Zuo-ipsi}. More specifically, the prominence of ipsilateral connections in structural connectomes, and the prominence of homotopic correlations in functional connectomes (Figure \ref{fig:ipsi}).
+
+%Transparency of Results
+Our focus on computational reproducibility manifested through \texttt{m2g} being open source and fully supporting execution via the Docker container platform. From version to version of \texttt{m2g}, prospective users do not need to worry about reproducibility issues due to dependency issues as container images are generated and uploaded to a public repository for each new version of m2g. These containers are released with version-controlled libraries for m2g and all its dependencies, maximizing run-to-run reproducibility in an easy way. The Docker image for m2g can be found at \url{https://neurodata.io/mri/}. We also confirmed within version computational reproducibility for \texttt{m2g} through the re-estimation of connectomes, which showed optimal discriminability values and Spearman's rank correlation greater than 0.98 for essentially all parcellations across datasets.
+
+
+%Vectors for Improvement
+The design criteria for \texttt{m2g} required certain trade-offs in performance to increase the generalizability of input data. With the strength of pipeline flexibility and minimal required user input still being paramount, \texttt{m2g} could be improved along several dimensions. First, recent advances in registration \cite{lddmm} and tractography \cite{probtrackx} could be incorporated. Second, several more sophisticated batch effect strategies have been successfully employed in dMRI data \cite{Fortin2017-dm,bridgeford_batch_paper}. Such strategies could possibly help here as well, especially if they are modified appropriately to work on binary graphs \cite{Leek2007}. Third, \texttt{m2g} may under-perform for particular populations (e.g., infants), for brains that show nonstandard structures such as tumors, resected regions, lesions, or other species (e.g., non-human primates~\cite{xu2020cross}).  Inclusion of the ability to supplement the standard MNI152 reference images and parcellations with ones relevant to nonstandard brain structures could drastically expand the populations \texttt{m2g} could process. This would be particularly interesting as a means to adapt the workflow to data collected from rodents and nonhuman primates in the future.
+
+%Future
+Because the methods developed during the creation of \texttt{m2g} are open-source and easy to use, and the data are open-access, the continual development of the pipeline and assessment of the connectomes generated is ready for outside collaboration. Due to the well-commented and modular code, modification is straightforward for python users. Along with the ease of use, a boon for the wider adoption of \texttt{m2g} is the plethora of connectomes created as a byproduct of its development. These connectomes are open-access and available from our website, \url{https://neurodata.io/mri/}.
+
+\section{Methods}
+\subsection{Data}
+The \texttt{m2g} pipelines were validated through the processing of the majority of data from the Consortium of Reliability and Reproducibility (CoRR). The CoRR data consists of 36 different studies from nearly 20 different institutions around the world, spanning the Americas, Europe, and Asia \cite{corr}. The CoRR data collection efforts were not harmonized, and all data (regardless of quality) were shared. Thus, these collections are well-suited to test the robustness of any pipeline. In addition to the CoRR data, we also used \texttt{m2g} to process several additional open-access data collections with complementary acquisition parameters (see Supporting Material \texttt{DatasetInfo.pdf}).
+Using this collection of MRI data, \texttt{m2g} pipeline development and parameter selection prioritized the maximization of discriminability scores across all datasets, while also focusing on limiting resource requirements.
+
+\subsection{m2g Input}
+The input required to run the \texttt{m2g} pipeline depends on whether functional and/or diffusion MRI data is being analyzed. The required inputs for either pipeline are:
+\begin{itemize}
+    \item A T1-weighted anatomical scan, either an uncompressed or gzipped nifti file
+    \item \textbf{\texttt{m2g-d}:} 
+    \begin{itemize}
+        \item A diffusion-weighted MRI file, either an uncompressed or gzipped nifti file
+        \item b-value and b-vector parameter files (.bval and .bvec file types)
+    \end{itemize}
+    \item \textbf{\texttt{m2g-f}:} \begin{itemize}
+        \item A functional MRI file, either an uncompressed or gzipped nifti file
+        \item The TR value (in seconds) and acquisition method used for the functional scan
+    \end{itemize}
+\end{itemize}
+The directory containing the input data must be BIDS formatted \cite{bidspec}. Both the \texttt{m2g-d} and \texttt{m2g-f} pipelines can be run independently or on the same dataset, provided the required data files are available. Which parcellation(s) to be used in the connectome creation can be specified by the user, whether they be unique files stored locally or from the neuroparc repository~\cite{neuroparc}. If no parcellations are present, then \texttt{m2g} will pull from the neuroparc repository and run all available parcellations.
+
+\subsection{m2g Diffusion Workflow}
+The \texttt{m2g} diffusion pipeline leverages existing open source tools, including the fMRI Software Library (FSL) ~\cite{fsl1, fsl2, fsl3}, Dipy~\cite{dipy}, the MNI152 atlas~\cite{mni152}, and a variety of parcellations defined in the MNI152 space~\cite{neuroparc}. The pipeline consists of five major steps: (1) Preprocessing, (2) Registration, (3) Tensor estimation, (4) Tractography, and (5) Graph generation.
+All algorithms used throughout the pipeline requiring hyper-parameter selection were initially set to the suggested parameters, and optimized on the subset of CoRR datasets. The output of each processing stage includes data derivatives and QA figures to enable individualized accuracy assessments. The QA figures at each major step include cross-sectional images at different depths in the three canonical planes (sagittal, coronal, and axial) of images or overlays. Figure~\ref{fig:ndmgpipeline} provides a schematic of the individual-level analysis.
+
+\subsubsection{Preprocessing}
+The input diffusion MRI data is first eddy-corrected using FSL's eddy\_correct \cite{dipy} program with the default parameters. This program was chosen as newer eddy functions either require substantially longer to run or rely on GPU acceleration, an additional resource requirement which would reduce the accessibility of \texttt{m2g}. The associated bvec and bval files are then checked for any errors and, if necessary, corrected using Dipy's read\_bvals\_bvecs function \cite{dipy} into a usable format. The b-vectors are then normalized, making sure to not alter the b-vector if its associated b-value is 0.
+
+The eddy-corrected dMRI file then has its orientation checked, and if not already oriented in RAS+ coordinate space, nibabel's as\_closest\_canonical ~\cite{nibable} is used for the reorientation. The b-vectors are also reoriented to RAS+ if necessary using default parameters. The dMRI file is then resliced to the desired voxel size (specified by the user, with a reasonable default of 2mm$^3$ if not specified) using Dipy's reslice function with trilinear interpolation\cite{dipy}.
+
+The T1 weighted MRI file (T1w) is also reoriented into RAS+ format using as\_closest\_canonical and similarly resliced, if necessary, into the desired voxel size using Dipy's reslice function \cite{dipy} with default parameters. The resulting image is then skull-stripped using AFNI's 3dSkullStrip function ~\cite{AFNI} with the surface density parameter set to 30, resulting in an anatomical image with all non-neuronal structures removed.
+
+\subsubsection{Registration}
+From the skull-stripped T1w anatomical file, three probability masks are generated for the grey matter, white matter, and cerebral spinal fluid regions of the brain using FSL's fast function \cite{fsl1, fsl2, fsl3} using default parameters. The white matter mask is then used to create another mask of just the outer edge of the white matter area using FSL's fslmaths \cite{fsl1, fsl2, fsl3}. Using FSL's flirt function \cite{fsl1, fsl2, fsl3}, an initial linear registration is made for the anatomical image to the reference MNI152 template in MNI space. An initial attempt is made for non-linear registration of the T1w image to the MNI template, using the affine transformation matrix previously created by the linear registration as a starting configuration. If it is not successful and throws an error, linear registration is used. Using FSL's fnirt function \cite{fsl1, fsl2, fsl3}, the nonlinear warp coefficients/field is generated to register the T1w image onto the reference MNI image. FSL's invwarp function \cite{fsl1, fsl2, fsl3} is then used on the coefficients/field to get the field for registering the reference MNI image onto the T1w image. However, if the nonlinear registration fails, then the linear registration affine transformation matrix for T1w to MNI is used and inverted using FSL's convert\_xfm \cite{fsl1, fsl2, fsl3}.
+
+FSL's flirt is then used for calculating the boundary-based registration (BBR) of the dwi image onto the T1w image, using 256 bins and 7 degrees of freedom. The resulting transformation matrix is inverted and used with a mutual information cost function in flirt to generate an image of the anatomical image registered to the dwi image. Using fslmaths, binary ventricle and corpus callosum masks in MNI space are generated. Along with the previously generated grey matter, white matter, and cerebral spinal fluid masks, flirt is used to register the masks to dwi space. A grey matter/white matter boundary binary mask is then made using fslmaths, which denotes the approximated boundary between the two tissue types across the entire brain, for later seed propagation in the tractography stage of the pipeline.
+
+Finally, the parcellation files to be used in the graph generation are reoriented using nibabel's as\_closest\_canonical function into RAS+, where they are resliced to the desired voxel size using Dipy's reslice function. They are then registered from MNI to dwi space using the previously calculated transformation matrices, utilizing FSL's flirt function and the ''nearest neighbor'' cost function.
+
+\subsubsection{Tractography}
+Seeds are generated along the grey matter/white matter boundary mask of the registered brain using a custom python script, where the number of seeds per voxel on the mask can be specified by the user. The seed locations and dwi image are then used in conjunction with Dipy tractography functions \cite{dipy} in order to generate a series of non-directional streamlines spanning the image. \texttt{m2g} offers deterministic or probabilistic tractography, Constrained Spherical Deconvolution (CSD) or Constant Solid Angle (CSA) reconstruction methods, and particle filter or local tracking. Regardless of the tractography settings specified, the resulting series of streamlines is output and saved to a trk file for use in graph generation.
+
+\subsubsection{Graph Generation}
+For each parcellation being analyzed, each streamline is converted into voxel coordinates and analyzed for overlap with any of the regions specified by the parcellation. \texttt{m2g} does not determine the direction of a given streamline, making its connectome and resulting graph undirected. If a streamline overlaps with a given region for more than 2mm, it is considered an intersection. The number of streamlines intersecting a given region and the other regions they also intersect with are recorded and tabulated in the form of a weighted edgelist. In this edgelist format each unique region of interest on the parcellation, marked by a unique intensity value, is considered a node whose edge weight is the number of streamlines that connect it to another region. For example, if a streamline intersects two or more regions in the parcellation (region A, region B, and region C) the weight of the edges AB, AC, and BC is increased by one. In this sense, the order through which the streamline intersects is not important. The resulting edgelist is saved in the form of a csv file, and an accompanying adjacency matrix of the normalized edgelist is also saved. A unique edgelist will be made for each parcellation specified by the user.
+
+\subsection{m2g Functional Workflow}
+The \texttt{m2g-f} pipeline was constructed starting with the optimal processing pipeline identified in Wang et. al~\cite{discriminability} using CPAC~\cite{cpac}. The CPAC pipeline utilizes existing open source tools, including FSL~\cite{fsl1,fsl2,fsl3}, the MNI152 atlas~\cite{mni152}, and a variety of parcellations defined in the MNI152 space \cite{neuroparc}. The functional pipeline consists of four major steps: (1) Preprocessing, (2) Registration, (3) Nuisance correction, and (4) Graph generation.
+
+\subsubsection{Preprocessing}
+The \texttt{m2g-f} pipeline in CPAC uses AFNI's SkullStripping function \cite{AFNI} with a variable shrink factor between 0.4 and 0.6 over 250 iterations with nearest neighbor interpolation to eliminate all non-neuronal structures from the anatomical image. The resulting anatomical file is resampled to the desired resolution voxel size using FSL's FNIRT \cite{fsl1, fsl2, fsl3}. Slice timing correction is then performed using AFNI's 3dTshift \cite{AFNI}, utilizing the TR value and scan acquisition method provided by the user. The resulting image is then motion corrected using AFNI's 3dvolreg, aligning all images to the first image in the functional MRI's timeseries.
+
+\subsubsection{Registration}
+Nonlinear boundary based registration of the preprocessed fMRI and anatomical images are performed in order to transform them into MNI152 space. The MNI152 6th generation anatomical reference image \cite{mni152} is used in this registration process, as it is FSL's preferred image. The functional image is then registered to the anatomical scan using FSL bet \cite{fsl1, fsl2, fsl3} with BBR. FSL's standard white matter, grey matter, and cerebral spinal fluid masks are then registered onto the functional image using FSL's FAST thresholding, resulting in segmentation tissue masks. The specified atlases that are going to be used in the connectome generation are also registered to the functional space using FSL's FLIRT function.
+
+\subsubsection{Nuisance Correction}
+Nuisance correction of the functional image is performed using the component based noise correction (CompCor) method. Using ''noise ROIs'', or areas of white matter and cerebral spinal fluid whose intensity values are unlikely to be modulated by neural activity, physiological noise can be isolated\cite{compcor}.Based on this assumption, physiological noise in gray matter regions can be corrected for by regressing out principal components from noise ROIs. CompCor uses the previously registered white matter and cerebral spinal fluid masks (csf) in order to determine noise ROIs. A principal component analysis is applied using the top five components of the white matter and csf to characterize the times series data from the noise ROIs. Significant principal components are then introduced as covariates in a general linear model as an estimate for the physiological noise single space. Polynomial Detrending is also performed to remove linear or quadratic trends in the timeseries, likely from changes in scanner heat or subject movement. After nuisance regression, frequency filtering occurs on the functional data using a bandpass filter from 0.01 Hz to 0.1 Hz to account for low-frequency drift and high-frequency noise.
+
+\subsubsection{Graph Generation}
+With the anatomical files and atlases registered to the functional image, the estimation of the functional connectomes for each atlas can occur. For each ROI, the timeseries of the average of all voxels within the ROI at each collection time point is calculated. This timeseries is then used to calculate the Pearson's correlation coefficient \cite{pearson} between each pair of ROIs. The functional connectome is then rank-transformed by replacing the magnitude of the correlation with its relative rank, from smallest to largest \cite{discriminability}. The resulting adjacency matrix of correlations is then saved, along with an edgelist file containing the same information.
+
+\subsection{Validation of m2g on Diverse Data}
+\subsubsection{Discriminability}
+To evaluate a method’s reliability, Wang et al. \cite{discriminability} developed a metric called “discriminability” that quantifies the fraction of measurements from the same individual that are closer to one another than they are to the measurement of any other individual. Discriminability, as seen in Equation (4.1), describes the probability that two observations within the same class are more similar to one another than two observations belonging to a different class:
+\begin{equation}
+D=P(||a_{ij}-a_{ij'}|| \leq ||a_{ij}-a_{i'j'}||)
+\end{equation}
+In the context of validation of \texttt{m2g}, each connectome is converted into a ranked vector, assigning each edge a weight between 0 and 1 from smallest to largest, and compared. This means that each connectome $a_{ij}$, in a test-retest dataset is first compared to other connectomes belonging to the same subject, $a_{ij'}$, and then to all connectomes belonging to other subjects, $a_{i'j'}$. A perfect discriminability score is 1, meaning that for all observations within the dataset, each connectome is more alike to connectomes from the same subject than to others. Optimizing \texttt{m2g} with respect to discriminability enables us to minimize the upper-bound on error for any general downstream inference task.
+The discriminability score for the multitude of datasets run through the default settings of \texttt{m2g} were recorded (see Supporting Material \texttt{DiscrimNumbers.xlsx}). 
+The average discriminability over all scans was approximately 0.85 for dMRI data and approximately 0.8 for fMRI data.
+
+\subsubsection{Connectome Connectivity}
+While discriminability may determine the extent that \texttt{m2g} preserves the unique properties of a given MRI scan, additional care must be taken to determine whether the connectomes generated by \texttt{m2g} conform with basic neurological phenomena. One way to do this involves observation of either the physical or functional connections between different regions of the brain. Three simple categories for these regions are ipsilateral (connections that stay within the left or right hemispheres), contralateral (across hemispheres), or homotopic (from one region of the brain to the same region on the other hemisphere).
+Using the edge weights from the structural connectomes generated by \texttt{m2g}, the percentage of edges that fell into each of the three connection types was calculated, and the mean and standard deviation were found for each dataset. This process was performed for three parcellations which had clearly-defined homotopic regions of interest, namely the DKT, Hammersmith, and AAL atlases. For the functional connectomes generated, the Pearson's correlation between regions of interest was used as a metric. The mean and standard deviation of each of the three connection types was found for each dataset (Figure \ref{fig:ipsi}). 
+
+%\subsubsection{Reproducibility}
+%In order to measure the extent to which m2g's repeated processing of data resulted in similar results, a subset of scans selected for repeated analysis. A total of 5 functional/diffusion weighted scans from each dataset was selected. Connectomes were estimated from each of the scans 5 times. Each connectome was then converted into a vector of edgeweights or Pearson correlations. To determine the consistency, the Spearman correlation between the connectomes from each scan was then calculated using the equation:
+%For a sample size $n$, the $n$ raw scores $X_i,Y_i$ are converted to ranks $rg_{X_i}$, $rg_{Y_i}$, and $r_s$ is computed as:
+%\begin{equation}
+%    r_s = \rho_{rg_X,rg_Y} = \frac{cov(rg_X,rg_Y)}{\sigma_{rg_X}\sigma_{rg_Y}}
+%\end{equation}
+%where $\rho$ denotes the usual Pearson correlation coefficient, but applied to the rank variables. $cov(rg_X,rg_Y)$ is the covariance of the rank variables, and $\sigma_{rg_X}$ and $\sigma_{rg_Y}$ are the standard deviations of the rank variables.
+
+
+\section{Ethical Compliance}
+We complied with all relevant ethical regulations. This study reused publicly available data acquired at many different institutions. Protocols for all of the original studies were approved by the corresponding ethical boards.
+
+\section{Software Availability}
+All of our processed data is available from our website, \url{http://m2g.io}, and has been deposited into our public github repository, \url{https://github.com/neurodata/m2g}, and published with a DOI, \url{https://doi.org/10.5281/zenodo.1161284}, under the Polyform License. Detailed documentation can be found at \url{https://docs.neurodata.io/m2g/}.
+
+\section{Data Availability}
+The data derivatives that support the findings of this study are available from our website, \url{http://m2g.io},  under a (ODC-By) v1.0 license.
+
+
+\section{Supplementary Figures}
+
+\section{Appendix}
+
+\begin{figure}[b!]
+    \centering
+    \includegraphics[width=1\textwidth]{Supporting-Material/ipsi_aal.pdf}
+    \caption[Analysis of the edge weights of both structural (top) and functional (bottom) connectomes estimated using the AAL parcellation method.]{\textbf{Connectome biological plausibility results} Analysis of the edge weights of both structural (top) and functional (bottom) connectomes estimated using the AAL parcellation method. For the structural connectomes, the mean of the percentage of streamlines observed between ipsilateral, contralateral, and homotopic ROIs was recorded and plotted for each scan. Mean Pearson correlation coefficients between ipsilateral, contralateral, and homotopic ROIs was plotted for functional connectomes. A consistent significantly higher ratio of ipsilateral connections was observed across parcellation methods for structural connectomes, as well as a higher correlation between homotopic ROIs across parcellation methods in functional connectomes.}
+    \label{fig:ipsi_aal}
+\end{figure}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/m2g/ipsi_hammer.pdf}
+    \caption[Analysis of the edge weights of both structural (top) and functional (bottom) connectomes estimated using the Hammersmith parcellation method.]{\textbf{Connectome biological plausibility results} Analysis of the edge weights of both structural (top) and functional (bottom) connectomes estimated using the Hammersmith parcellation method. For the structural connectomes, the mean of the percentage of streamlines observed between ipsilateral, contralateral, and homotopic ROIs was recorded and plotted for each scan. Mean Pearson correlation coefficients between ipsilateral, contralateral, and homotopic ROIs was plotted for functional connectomes. A consistent significantly higher ratio of ipsilateral connections was observed across parcellation methods for structural connectomes, as well as a higher correlation between homotopic ROIs across parcellation methods in functional connectomes.}
+    \label{fig:ipsi_hammer}
+\end{figure}
+
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width = 0.8\textwidth]{figures/m2g/diff_skullstip.png}
+    \caption[Quality assurance figure from the \texttt{m2g-d} pipeline]{\textbf{Skull-stripping \texttt{m2g-d} QA} Quality assurance figure from the \texttt{m2g-d} pipeline displaying the skull-stripped brain (green) over the original anatomical image (magenta). Images are sampled from three locations along the sagittal, coronal, and axial reference directions.
+    }
+    \label{fig:diff_skull}
+\end{figure}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width = 0.8\textwidth]{figures/m2g/func_skullstrip.png}
+    \caption[Quality assurance figure from the \texttt{m2g-f} pipeline]{\textbf{Skull-stripping \texttt{m2g-f} QA} Quality assurance figure from the \texttt{m2g-f} pipeline displaying the skull stripped brain (white) and the outline of the removed skull (red). This particular output displays images from the sagittal reference direction, with another output displaying from the axial direction.
+    }
+    \label{fig:func_skull}
+\end{figure}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width = 0.7\textwidth]{figures/m2g/diff_mapped_atlas.png}
+    \caption[Quality assurance figure from the \texttt{m2g-d} pipeline displaying the registered Tissue parcellation (green) over the brain it is registered to from the anatomical image(magenta).]{\textbf{Parcellation Registration QA} Quality assurance figure from the \texttt{m2g-d} pipeline displaying the registered Tissue parcellation (green) over the brain it is registered to from the anatomical image(magenta). Images are sampled from three locations along the sagittal, coronal, and axial reference directions.
+    }
+    \label{fig:diff_mapped}
+\end{figure}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width = 0.8\textwidth]{figures/m2g/func_motion_plot.png}
+    \caption[ Quality assurance figure from the \texttt{m2g-f} pipeline which plots the distance in the x, y, and z axes that each functional volume was moved during the motion correction using AFNI's 3dvolreg.]{\textbf{Motion Correction QA} Quality assurance figure from the \texttt{m2g-f} pipeline which plots the distance in the x, y, and z axes that each functional volume was moved during the motion correction using AFNI's 3dvolreg.
+    }
+    \label{fig:func_motion}
+\end{figure}
